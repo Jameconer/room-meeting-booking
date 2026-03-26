@@ -1,0 +1,268 @@
+import { useState, useEffect } from "react";
+import Confirm from "../../Components/Laout_component/confirmModal"
+import toast from 'react-hot-toast';
+
+export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
+
+  const [form, setForm] = useState({
+    roomName: roomData.room,
+    room_id: roomData.room_id,
+    date: roomData.date,
+    capacity: roomData.capacity,
+    startTime: "",
+    endTime: "",
+    title: roomData.existing?.title || "",
+    job: roomData.existing?.job || "",
+    description: roomData.existing?.description || "",
+    attendee: roomData.existing?.attendee || "",
+    isEditing: roomData.isEditing || false
+  });
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // HANDLE SUBMIT
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const start_at = `${form.date} ${form.startTime}`;
+    const end_at = `${form.date} ${form.endTime}`;
+
+    if (new Date(start_at) >= new Date(end_at)) {
+      toast.error("เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุด");
+      return;
+    }
+    
+    const isConflict = isOverlapping(
+      `${form.date}T${form.startTime}`,
+      `${form.date}T${form.endTime}`,
+      roomData.bookings || []
+    );
+
+    if (isConflict) {
+      toast.error("ช่วงเวลานี้ถูกจองแล้ว");
+      return;
+    }
+
+    const payload = {
+      room_id: Number(form.room_id),
+      start_at,
+      end_at,
+      meeting_title: form.title,
+      meeting_description: form.description,
+      job: form.job,
+      attendee_count: Number(form.attendee) || 0,
+      created_by: 70
+    };
+
+    try {
+      const res = await fetch(
+        "http://192.168.16.203:8090/api/booking/create_booking",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Server response error:", text);
+        toast.error(`บันทึกไม่สำเร็จ: ${res.status}`);
+        return;
+      }
+
+      const result = await res.json();
+      console.log("payload sent:", payload);
+      console.log("server response:", result);
+
+      toast.success("บันทึกรายการจองสำเร็จ");
+
+      onSave({
+        room: form.roomName,
+        room_id: Number(form.room_id),
+        startDateTime: `${form.date}T${form.startTime}`,
+        endDateTime: `${form.date}T${form.endTime}`,
+        title: form.title,
+        description: form.description,
+        job: form.job,
+        attendee: Number(form.attendee) || 0,
+        id: result?.id
+      });
+
+      onClose();
+    } catch (err) {
+      console.error("fetch error:", err);
+      toast.error("บันทึกไม่สำเร็จ");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white w-[480px] h-[800px] p-6 rounded-2xl shadow-md border border-gray-100 overflow-auto relative">
+
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-1.5 rounded-md 
+  text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <h2 className="text-xl font-semibold mb-6 text-gray-800">
+          {form.isEditing ? "แก้ไขการจอง" : "จองห้องประชุม"}
+        </h2>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* ห้องประชุม */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">ชื่อห้องประชุม</label>
+            <input
+              value={form.roomName}
+              readOnly
+              className="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-lg text-gray-500"
+            />
+          </div>
+
+          {/* Capacity */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">จำนวนที่รองรับ</label>
+            <input
+              value={form.capacity}
+              readOnly
+              className="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-lg text-gray-500"
+            />
+          </div>
+
+          {/* วันที่ */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">วันที่</label>
+            <input
+              value={form.date}
+              readOnly
+              className="w-full bg-gray-50 border border-gray-200 p-2.5 rounded-lg text-gray-500"
+            />
+          </div>
+
+          {/* เวลา */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">เวลาเริ่ม</label>
+              <input
+                type="time"
+                name="startTime"
+                value={form.startTime}
+                onChange={handleChange}
+                className="w-full border border-gray-200 p-2.5 rounded-lg 
+            focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">เวลาสิ้นสุด</label>
+              <input
+                type="time"
+                name="endTime"
+                value={form.endTime}
+                onChange={handleChange}
+                className="w-full border border-gray-200 p-2.5 rounded-lg 
+            focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
+              />
+            </div>
+          </div>
+
+          {/* ชื่อการอบรม */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">ชื่อการอบรม</label>
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              className="w-full border border-gray-200 p-2.5 rounded-lg 
+          focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              required
+            />
+          </div>
+
+          {/* แผนก */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">แผนก</label>
+            <input
+              name="job"
+              value={form.job}
+              onChange={handleChange}
+              className="w-full border border-gray-200 p-2.5 rounded-lg 
+          focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              required
+            />
+          </div>
+
+          {/* description */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">ข้อมูลเพิ่มเติม</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full border border-gray-200 p-2.5 rounded-lg resize-none 
+          focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* attendee */}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">จำนวนคน</label>
+            <input
+              type="number"
+              name="attendee"
+              value={form.attendee}
+              onChange={handleChange}
+              className="w-full border border-gray-200 p-2.5 rounded-lg 
+          focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              required
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg bg-gray-100 text-gray-600 
+          hover:bg-gray-200 transition"
+            >
+              ยกเลิก
+            </button>
+
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-lg bg-emerald-600 text-white 
+          hover:bg-emerald-700 transition shadow-sm"
+            >
+              {form.isEditing ? "บันทึกการแก้ไข" : "บันทึก"}
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  );
+}

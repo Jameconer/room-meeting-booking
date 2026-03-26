@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="/favicon.ico" />
+    
+  </head>
+  <body>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+      <filter id="white">
+        <feColorMatrix type="saturate" values="0" />
+        <feColorMatrix type="matrix"
+          values="0 0 0.1 0 -1
+                  0.5 0 0.5 0 -1
+                  -1 4 0 1 -1 
+                  -0 -0.2 -1.2 1 0" />
+      </filter>
+    </svg>
+    
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+      AOS.init();
+    </script>
+  </body>
+</html>

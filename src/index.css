@@ -1,0 +1,61 @@
+@import url("https://fonts.googleapis.com/css2?family=Mitr&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Leckerli+One&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Kanit:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Kanit", serif;
+  font-style: normal;
+}
+
+html {
+  scrollbar-width: none;
+  /* ซ่อน scrollbar */
+}
+
+@layer components {
+
+  /* .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  } */
+  .resize-handle {
+    position: absolute;
+    top: 0;
+    right: -2px;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+  }
+
+  @keyframes scaleIn {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-scaleIn {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  .resize-handle:hover {
+    background-color: #ccc;
+  }
+
+  .react-resizable-handle {
+    display: none;
+  }
+
+
+}

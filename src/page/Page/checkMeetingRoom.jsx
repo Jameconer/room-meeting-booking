@@ -1,0 +1,305 @@
+import { useState, useRef, useMemo, useEffect } from "react";
+import { AddBooking } from "./addFormBooking";
+import { MonthlySchedule } from "./monthlySchedule";
+import { EditBooking } from "./editFormBooking";
+import toast from "react-hot-toast";
+
+export function CheckMeetingRoom({ open, onClose }) {
+
+  const [roomData, setRoomData] = useState({ stats: [] });
+  const [allRooms, setAllRooms] = useState([]);
+
+  const today = new Date();
+
+  // MONTH CONTROL
+  const [currentDate, setCurrentDate] = useState({
+    year: today.getFullYear(),
+    month: today.getMonth()
+  });
+
+  useEffect(() => {
+
+    const monthStr = `${currentDate.year}-${String(currentDate.month + 1).padStart(2, "0")}`;
+
+    fetch("http://192.168.16.203:8090/api/booking/get_meeting_rooms_booking", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        month: monthStr
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        const apiRooms = data.data || [];
+
+        setAllRooms(prev => {
+          const newRooms = apiRooms.map(r => r.room);
+          const merged = [...new Set([...prev, ...newRooms])];
+
+          setRoomData(formatRoomData(apiRooms, merged));
+          console.log(apiRooms);
+
+          return merged;
+        });
+
+      })
+      .catch(err => console.error(err));
+
+  }, [currentDate]);
+
+  const formatRoomData = (data, rooms) => {
+    return {
+      stats: rooms.map(roomName => {
+
+        const found = data.find(r => r.room === roomName);
+
+        return {
+          room: roomName,
+          room_id: found?.room_id,
+          capacity: found?.capacity || 0,
+          bookings: found
+            ? found.bookings.map(b => ({
+              id: b.id,
+              startDateTime: b.start_at,
+              endDateTime: b.end_at,
+              title: b.meeting_title || "",
+              job: "",
+              description: b.meeting_description || "",
+              attendee: b.attendee_count ?? 0,
+            }))
+            : []
+        };
+
+      })
+    };
+  };
+
+  const tableRef = useRef(null);
+
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [editBooking, setEditBooking] = useState(null);
+
+  const [resultRooms, setResultRooms] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
+  const [roomFilter, setRoomFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+
+  const isOverlapping = (newStart, newEnd, bookings, excludeId = null) => {
+    return bookings.some(b => {
+      if (excludeId && b.id === excludeId) return false;
+
+      const oldStart = new Date(b.startDateTime);
+      const oldEnd = new Date(b.endDateTime);
+
+      return new Date(newStart) < oldEnd && new Date(newEnd) > oldStart;
+    });
+  };
+
+  // ADD BOOKING
+  const handleAddBooking = (newBooking) => {
+
+    setRoomData((prev) => {
+      return {
+        stats: prev.stats.map((room) => {
+          if (room.room !== newBooking.room) return room;
+
+          return {
+            ...room,
+            bookings: [...room.bookings, newBooking]
+          };
+        })
+      };
+    });
+
+    const d = new Date(newBooking.startDateTime);
+    setCurrentDate({
+      year: d.getFullYear(),
+      month: d.getMonth()
+    });
+
+    setSelectedRoom(null);
+  };
+
+  // EDIT BOOKING
+  const handleEditBooking = (updated) => {
+    setRoomData(prev => ({
+      stats: prev.stats.map(room => {
+
+        if (room.room !== updated.room) return room;
+
+        return {
+          ...room,
+          bookings: room.bookings.map(b =>
+            b.id === updated.id ? { ...b, ...updated } : b
+          )
+        };
+      })
+    }));
+
+    setEditBooking(null);
+  };
+
+  const handleDeleteBooking = (target) => {
+    setRoomData((prev) => ({
+      stats: prev.stats.map((room) => ({
+        ...room,
+        bookings: room.bookings.filter((b) =>
+          !(b.startDateTime === target.startDateTime &&
+            b.endDateTime === target.endDateTime &&
+            room.room === target.room)
+        )
+      }))
+    }));
+  };
+
+  const changeMonth = (step) => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev.year, prev.month + step, 1);
+      return {
+        year: newDate.getFullYear(),
+        month: newDate.getMonth()
+      };
+    });
+  };
+
+  const goToToday = () => {
+    const now = new Date();
+    setCurrentDate({
+      year: now.getFullYear(),
+      month: now.getMonth()
+    });
+  };
+
+  // FILTER ROOM
+  const displayRooms = roomData.stats.map(r => r.room).filter((room) => {
+
+    if (activeTab === "training") return room.includes("ห้องอบรม");
+    if (activeTab === "meeting") return !room.includes("ห้องอบรม");
+
+    return true;
+  });
+
+  const filteredRooms =
+    roomFilter === ""
+      ? displayRooms
+      : displayRooms.filter((room) => room === roomFilter);
+
+  const handleCellClick = ({ room, day }) => {
+
+    const date = `${currentDate.year}-${String(currentDate.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+    const roomInfo = roomData.stats.find(r => r.room === room);
+
+    setSelectedRoom({
+      room,
+      room_id: roomInfo.room_id,
+      capacity: roomInfo.capacity,
+      bookings: roomInfo.bookings,
+      date
+    });
+  };
+
+  const monthlySchedule = useMemo(() => {
+
+    const year = currentDate.year;
+    const month = currentDate.month;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    return Array.from({ length: daysInMonth }, (_, i) => {
+      const day = i + 1;
+
+      const rooms = Object.fromEntries(
+        roomData.stats.map((room) => {
+
+          const bookings = room.bookings.filter((b) => {
+            const d = new Date(b.startDateTime);
+
+            return (
+              d.getFullYear() === year &&
+              d.getMonth() === month &&
+              d.getDate() === day
+            );
+          });
+
+          return [room.room, bookings];
+        })
+      );
+
+      return { day, rooms };
+    });
+  }, [currentDate, roomData]);
+
+  if (!open) return null;
+
+  // UI
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+      <div className="bg-white w-full h-full rounded-xl shadow-lg flex flex-col overflow-hidden">
+
+        {/* HEADER */}
+        <div className="bg-blue-600 text-white px-6 py-4 flex justify-between">
+          <h2>ระบบจองห้องประชุม</h2>
+          <button onClick={onClose} className="bg-white text-blue-600 px-3 py-1 rounded">
+            ปิด
+          </button>
+        </div>
+
+        {/* BODY */}
+        <div className="flex-1 p-6 flex flex-col gap-6 min-h-0">
+
+          <MonthlySchedule
+            data={monthlySchedule}
+            currentDate={currentDate}
+            changeMonth={changeMonth}
+            goToToday={goToToday}
+            tableRef={tableRef}
+            displayRooms={displayRooms}
+            setActiveTab={setActiveTab}
+            activeTab={activeTab}
+            roomFilter={roomFilter}
+            setRoomFilter={setRoomFilter}
+            filteredRooms={filteredRooms}
+            onCellClick={handleCellClick}
+            useState={useState}
+            useMemo={useMemo}
+            onEditBooking={(booking) => {
+              const roomInfo = roomData.stats.find(r => r.room === booking.room);
+
+              setEditBooking({
+                id: booking.id,
+                ...booking,
+                room_id: roomInfo?.room_id,
+                bookings: roomInfo?.bookings || []
+              });
+            }}
+          />
+
+        </div>
+
+        {/* MODALS */}
+        {selectedRoom && (
+          <AddBooking
+            roomData={selectedRoom}
+            onClose={() => setSelectedRoom(null)}
+            onSave={handleAddBooking}
+            isOverlapping={isOverlapping}
+          />
+        )}
+
+        {editBooking && (
+          <EditBooking
+            bookingData={editBooking}
+            onClose={() => setEditBooking(null)}
+            onSave={handleEditBooking}
+            onDelete={handleDeleteBooking}
+            isOverlapping={isOverlapping} 
+          />
+        )}
+
+      </div>
+    </div>
+  );
+}
