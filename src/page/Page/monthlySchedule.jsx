@@ -12,7 +12,8 @@ export function MonthlySchedule({
   filteredRooms,
   onCellClick,
   onEditBooking,
-  useState
+  rowRefs,
+  useState 
 }) {
 
   const monthLabel = new Date(
@@ -103,7 +104,7 @@ export function MonthlySchedule({
   // รับ theme เข้ามา
   const renderTimeBlocks = (bookings = [], room, day) => {
     return (
-      <div className="relative h-[60px] bg-black/5 rounded overflow-hidden">
+      <div className="relative h-[40px] bg-black/5 rounded overflow-hidden">
 
         {/* timeline grid */}
         <div className="absolute inset-0 grid grid-cols-8">
@@ -171,7 +172,7 @@ export function MonthlySchedule({
               }}
             >
               <div
-                className={`h-[26px] flex items-center justify-center
+                className={`h-[20px] flex items-center justify-center
                 bg-gradient-to-r from-red-400 to-red-500
                 text-white text-[14px] font-semibold
                 rounded-xl px-2 shadow-lg
@@ -192,7 +193,7 @@ export function MonthlySchedule({
     <div className="bg-white rounded-lg border shadow-sm flex flex-col h-full">
 
       {/* HEADER */}
-      <div className="p-3 border-b bg-gray-50 flex items-center justify-between flex-wrap gap-2">
+      <div className="p-2 border-b bg-gray-50 flex items-center justify-between flex-wrap gap-2">
 
         <div className="flex items-center gap-2 flex-wrap">
 
@@ -256,7 +257,7 @@ export function MonthlySchedule({
 
           <thead>
             <tr>
-              <th className="border w-[60px]">วันที่</th>
+              <th className="border w-[40px]">วันที่</th>
 
               {roomsToShow.map((room, index) => {
                 const theme = getRoomTheme(index);
@@ -284,8 +285,14 @@ export function MonthlySchedule({
               return (
                 <tr
                   key={row.day}
+                  ref={(el) => (rowRefs.current[row.day] = el)}
                 >
-                  <td className="border text-center font-semibold bg-gray-50 relative">
+
+                  <td
+                    className={`border text-center font-semibold relative
+                      ${isToday}
+                    `}
+                  >
                     {row.day}
 
                     {isToday && (
@@ -316,8 +323,8 @@ export function MonthlySchedule({
                           if (!isCurrentMonth) return;
                           onCellClick({ room, day: row.day });
                         }}
-                        className={`relative border p-1 max-w-[180px] overflow-hidden 
-                          ${theme.cell}
+                        className={`relative border p-[2px] overflow-hidden 
+                          ${theme.cell} 
                           ${isCurrentMonth ? "cursor-pointer" : "cursor-default"}
                         `}
                         title={
@@ -329,6 +336,10 @@ export function MonthlySchedule({
                         }
                       >
 
+                        {isToday && (
+                          <div className="absolute inset-0 bg-red-200/30 pointer-events-none"></div>
+                        )}
+
                         {renderTimeBlocks(bookings, room, row.day)}
 
                         {isFutureMonth && (
@@ -337,6 +348,7 @@ export function MonthlySchedule({
                           </div>
                         )}
                       </td>
+
                     );
                   })}
                 </tr>

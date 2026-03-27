@@ -1,200 +1,308 @@
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import { Navbar } from "../../Components/Laout_component/navbar";
-import { Calendar } from "../../Components/Laout_component/calendar";
 import { CheckMeetingRoom } from "./checkMeetingRoom";
 
 export function MeetingRoomDashboard() {
 
-  const navigate = useNavigate();
-
-  const [selectedRoom, setSelectedRoom] = useState(null);
-
-  const [openCalendar, setOpenCalendar] = useState(false);
   const [openAddPopup, setOpenAddPopup] = useState(false);
-  const [bookings, setBookings] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("")
-  const [date, setDate] = useState(new Date());
+  const [roomData, setRoomData] = useState([]);
 
-  const fetchBookings = async () => {
+  const [loading, setLoading] = useState(true);
+  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
 
-    try {
-      const res = await axios.get("http://localhost:5000/api/bookings");
-      setBookings(res.data);
-    } catch (err) {
-      console.error("โหลดข้อมูลไม่สำเร็จ", err);
+  // -------- SELECT TIME --------
+  const [selectedStart, setSelectedStart] = useState(dayjs());
+  const [selectedEnd, setSelectedEnd] = useState(dayjs().add(1, "hour"));
+
+  const allEquipment = ["TV", "Projector", "Speaker", "Zoom", "Whiteboard"];
+
+  const demoEquipment = allEquipment
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 3);
+
+  // กันเลือกเวลาเพี้ยน
+  useEffect(() => {
+    if (selectedStart.isAfter(selectedEnd)) {
+      setSelectedEnd(selectedStart.add(1, "hour"));
     }
-  };
+  }, [selectedStart]);
 
   useEffect(() => {
-    fetchBookings();
-  }, []);
+    if (roomData.length > 0) {
+      setLoading(false);
+    }
+  }, [roomData]);
 
-  const today = dayjs().format("YYYY-MM-DD");
-  const todayBookings = bookings.filter(b => b.date === today);
+  useEffect(() => {
+    if (selectedStart.isAfter(selectedEnd)) {
+      setSelectedEnd(selectedStart.add(1, "hour"));
+    }
+  }, [selectedStart]);
 
-  const stats = [
-    { title: "ห้องทั้งหมด", value: 10, color: "text-blue-600" },
-    { title: "จองวันนี้", value: todayBookings.length, color: "text-red-600" },
-    { title: "ห้องว่าง", value: 10 - todayBookings.length, color: "text-green-600" }
-  ];
+  // -------- CHECK AVAILABLE --------
+  const isRoomAvailable = (room) => {
+    return !room.bookings.some((b) => {
+      return (
+        selectedStart.isBefore(b.end_at) &&
+        selectedEnd.isAfter(b.start_at)
+      );
+    });
+  };
+
+  // -------- GET STATUS --------
+  const getRoomStatus = (room) => {
+    const now = dayjs();
+
+    const todayBookings = room.bookings.filter(b =>
+      b.start_at.isSame(selectedStart, "day")
+    );
+
+    const current = todayBookings.find(b =>
+      now.isAfter(b.start_at) && now.isBefore(b.end_at)
+    );
+
+    const next = todayBookings
+      .filter(b => now.isBefore(b.start_at))
+      .sort((a, b) => a.start_at - b.start_at)[0];
+
+    return {
+      current,
+      next,
+      isBusy: !!current,
+      roomBookings: room.bookings
+    };
+  };
+
+  const availableRooms = roomData.filter(r => isRoomAvailable(r)).length;
+
+  const nowHour = dayjs().hour();
+  const showNow = nowHour >= 8 && nowHour <= 17;
 
   return (
-
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
       <Navbar />
 
-      {/* Menu */}
-      <div className="pt-20 flex gap-8 text-md font-semibold justify-center bg-gray-900 py-2">
-        <span
-          onClick={() => setOpenCalendar(true)}
-          className="cursor-pointer text-white hover:text-orange-500 transition"
-        >
-          ปฏิทินการจอง
-        </span>
-        <span
-          onClick={() => navigate("/rooms")}
-          className="cursor-pointer text-white hover:text-orange-500 transition"
-        >
-          ห้องประชุมทั้งหมด
-        </span>
+      {/* HEADER */}
+      <div className="pt-5 px-10 flex justify-between items-center">
       </div>
 
-      {/* Stats */}
-      <div className="p-10 grid md:grid-cols-3 gap-8">
-        {stats.map(({ title, value, color }) => (
-          <div
-            key={title}
-            className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition flex justify-between items-center min-h-[120px]"
-          >
+      {/* TIME SELECT */}
+      <div className="px-10 mt-20">
+        <div className="bg-white p-6 rounded-2xl shadow flex items-end justify-between">
+
+          {/* LEFT */}
+          <div className="flex gap-6 items-end">
+
+            {/* START DATETIME */}
+            <div className="flex flex-col">
+              <label className="text-xs text-gray-900 mb-1">เริ่ม</label>
+              <input
+                type="datetime-local"
+                value={selectedStart.format("YYYY-MM-DDTHH:mm")}
+                onChange={(e) => setSelectedStart(dayjs(e.target.value))}
+                className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-400"
+              />
+            </div>
+
+            {/* END DATETIME */}
+            <div className="flex flex-col">
+              <label className="text-xs text-gray-900 mb-1">สิ้นสุด</label>
+              <input
+                type="datetime-local"
+                value={selectedEnd.format("YYYY-MM-DDTHH:mm")}
+                onChange={(e) => setSelectedEnd(dayjs(e.target.value))}
+                className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-400"
+              />
+            </div>
+
+            {/* STATUS */}
             <div>
-              <p className="text-slate-500 text-base">
-                {title}
-              </p>
-              <h2 className={`text-4xl font-bold ${color}`}>
-                {value}
-              </h2>
+              <p className="text-xs text-gray-500">ห้องพร้อมใช้งาน</p>
+              <p className="text-lg font-semibold">{availableRooms} ห้อง</p>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Table */}
-      <div className="px-10 pb-10">
-
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <div className="bg-white rounded-xl shadow overflow-hidden">
-
-            <div className="px-6 py-4 border-b flex items-center gap-6">
-
-              {/* Search */}
-              <div className="flex-1">
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    placeholder="ค้นหาการจอง / ห้องประชุม / ผู้จอง"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-5 py-3 pr-12 rounded-full border-2 border-slate-300 bg-slate-50 text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:bg-white transition duration-200"
-                  />
-
-                  <button
-                    className="absolute right-4 text-slate-400 hover:text-blue-600 transition duration-200"
-                    title="ค้นหา"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Add Button */}
-              <button
-                onClick={() => setOpenAddPopup(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg shadow whitespace-nowrap"
-              >
-                + จองห้องประชุม
-              </button>
-
-            </div>
           </div>
 
-          <table className="w-full text-sm text-center">
-            <thead className="bg-slate-50 text-slate-600 text-base font-semibold">
-              <tr>
-                <th className="p-4">ห้อง</th>
-                <th className="p-4">ผู้จอง</th>
-                <th className="p-4">วันที่</th>
-                <th className="p-4">เวลา</th>
-                <th className="p-4">สถานะ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="text-center p-10 text-slate-400">
-                    ไม่มีข้อมูล
-                  </td>
-                </tr>
-              ) : (
-                bookings.map((b, i) => (
-                  <tr key={i} className="border-t hover:bg-slate-50">
-                    <td className="p-3 font-medium">
-                      {b.room}
-                    </td>
-                    <td className="p-3">
-                      {b.employee}
-                    </td>
-                    <td className="p-3">
-                      {dayjs(b.date).format("DD MMM YYYY")}
-                    </td>
-                    <td className="p-3">
-                      {b.startTime} - {b.endTime}
-                    </td>
-                    <td className="p-3">
-                      {dayjs(b.date).isBefore(today) ? (
-                        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
-                          เสร็จสิ้น
-                        </span>
-                      ) : (
-                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                          กำลังจอง
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+          {/* BUTTON */}
+          <button
+            onClick={() => setOpenAddPopup(true)}
+            className="bg-emerald-500 text-white px-6 py-2.5 rounded-xl shadow hover:scale-105 transition"
+          >
+            + จองห้อง
+          </button>
+
         </div>
       </div>
 
-      {/* Calendar Popup */}
-      <Calendar
-        open={openCalendar}
-        onClose={() => setOpenCalendar(false)}
-        bookings={bookings}
-      />
+      {/* GRID */}
+      <div className="p-10 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      {/* Add Booking Popup */}
+        {loading ? (
+          <div className="col-span-full text-center text-gray-500">
+            Loading...
+          </div>
+        ) : roomData.map((room) => {
+
+          const { current, next, roomBookings } = getRoomStatus(room);
+          const available = isRoomAvailable(room);
+
+          return (
+            <div
+              key={room.id}
+              className="bg-white rounded-2xl border hover:shadow-xl transition overflow-hidden"
+            >
+
+              {/* IMAGE */}
+              <div className="relative">
+                <img
+                  src=""
+                  className="h-40 w-full object-cover"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+
+                <div className="absolute bottom-3 left-4 text-white">
+                  <h2 className="font-semibold">{room.name}</h2>
+                  <p className="text-xs">{room.capacity} คน</p>
+
+                {/* เผื่อไว้ */}
+                  <p className="text-[14px] mt-1 px-1 py-[0.5px] bg-[#3b2b83] rounded inline-block">
+                    Sriracha Construction Public Company Limited
+                  </p>
+
+                </div>
+
+                <div className="absolute top-3 right-3">
+                  <span className="flex items-center gap-2 text-sm px-3 py-1 rounded-full bg-white/80 backdrop-blur shadow">
+                    <span className={`w-2 h-2 rounded-full ${available ? "bg-emerald-500" : "bg-red-500"}`} />
+                    {available ? "พร้อมใช้งาน" : "ถูกจอง"}
+                  </span>
+                </div>
+              </div>
+
+              {/* CONTENT */}
+              <div className="p-4">
+
+                {/* CURRENT */}
+                {current && (
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-400">Now</p>
+                    <p className="text-sm font-medium">{current.title}</p>
+                    <p className="text-xs text-gray-400">
+                      {current.start_at.format("HH:mm")} - {current.end_at.format("HH:mm")}
+                    </p>
+                  </div>
+                )}
+
+                {/* NEXT */}
+                {next && (
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-400">Next</p>
+                    <p className="text-sm">{next.title}</p>
+                    <p className="text-xs text-gray-400">
+                      {next.start_at.format("HH:mm")}
+                    </p>
+                  </div>
+                )}
+
+                {/* TIMELINE */}
+                <div className="relative">
+
+                  <div className="relative h-1.5 bg-green-100 rounded-full overflow-hidden">
+
+                    {showNow && (
+                      <div
+                        className="absolute top-0 h-full w-[2px] bg-gray-500"
+                        style={{
+                          left: `${((nowHour - 8) / 9) * 100}%`
+                        }}
+                      />
+                    )}
+
+                    {roomBookings
+                      .filter(b =>
+                        b.start_at.isSame(selectedStart, "day")
+                      )
+                      .map((b, i) => {
+
+                        const start = b.start_at.hour();
+                        const end = b.end_at.hour();
+
+                        const safeStart = Math.max(start, 8);
+                        const safeEnd = Math.min(end, 17);
+
+                        if (safeEnd <= safeStart) return null;
+
+                        return (
+                          <div
+                            key={i}
+                            className="absolute top-0 h-full bg-red-500/80 rounded-full"
+                            style={{
+                              left: `${((safeStart - 8) / 9) * 100}%`,
+                              width: `${((safeEnd - safeStart) / 9) * 100}%`
+                            }}
+                          />
+                        );
+                      })}
+                  </div>
+
+                  <div className="flex justify-between text-[10px] text-gray-400 mt-2 px-1">
+                    <span>08:00</span>
+                    <span>10:00</span>
+                    <span>12:00</span>
+                    <span>14:00</span>
+                    <span>17:00</span>
+                  </div>
+
+                </div>
+
+                <div className="flex flex-wrap gap-2 mt-5">
+                  {demoEquipment.map((eq, i) => (
+                    <span
+                      key={i}
+                      className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-gray-50 text-gray-700 border"
+                    >
+                      {eq === "TV" && "📺"}
+                      {eq === "Projector" && "📽️"}
+                      {eq === "Speaker" && "🔊"}
+                      {eq === "Zoom" && "💻"}
+                      {eq === "Whiteboard" && "📝"}
+                      {eq === "Camera" && "📷"}
+                      {eq === "Mic" && "🎤"}
+                      {eq}
+                    </span>
+                  ))}
+                </div>
+
+                {/* BUTTON */}
+                {available && (
+                  <button
+                    onClick={() => {
+                      setSelectedRoomForBooking(room);
+                      setOpenAddPopup(true);
+                    }}
+                    className="mt-4 w-full border border-gray-300 py-2 rounded-xl hover:bg-gray-900 hover:text-white transition"
+                  >
+                    จองห้องนี้
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+      </div>
+
+      {/* POPUP */}
       <CheckMeetingRoom
         open={openAddPopup}
-        onClose={() => setOpenAddPopup(false)}
-        onSuccess={fetchBookings}
+        onClose={() => {
+          setOpenAddPopup(false);
+          setSelectedRoomForBooking(null);
+        }}
+        onDataLoaded={setRoomData}
+        defaultRoom={selectedRoomForBooking}
       />
 
     </div>

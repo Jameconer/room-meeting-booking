@@ -2,12 +2,14 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import { AddBooking } from "./addFormBooking";
 import { MonthlySchedule } from "./monthlySchedule";
 import { EditBooking } from "./editFormBooking";
-import toast from "react-hot-toast";
+import dayjs from "dayjs";
 
-export function CheckMeetingRoom({ open, onClose }) {
+export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded }) {
 
   const [roomData, setRoomData] = useState({ stats: [] });
   const [allRooms, setAllRooms] = useState([]);
+
+  const rowRefs = useRef({});
 
   const today = new Date();
 
@@ -34,20 +36,58 @@ export function CheckMeetingRoom({ open, onClose }) {
       .then(data => {
         const apiRooms = data.data || [];
 
-        setAllRooms(prev => {
-          const newRooms = apiRooms.map(r => r.room);
-          const merged = [...new Set([...prev, ...newRooms])];
+        const roomNames = apiRooms.map(r => r.room);
+        setAllRooms(prev => [...new Set([...prev, ...roomNames])]);
 
-          setRoomData(formatRoomData(apiRooms, merged));
-          console.log(apiRooms);
+        const formatted = {
+          stats: apiRooms.map((r, index) => ({
+            room: r.room,
+            room_id: r.room_id,
+            capacity: r.capacity,
+            location: "",
+            equipment: "",
 
-          return merged;
-        });
+            bookings: r.bookings.map(b => ({
+              id: b.id,
+              startDateTime: b.start_at,
+              endDateTime: b.end_at,
+              meeting_title: b.meeting_title || "",
+              meeting_description: b.meeting_description || "",
+              attendee_count: b.attendee_count ?? 0
+            }))
+          }))
+        };
+
+        setRoomData(formatted);
+
+        if (onDataLoaded) {
+          onDataLoaded(
+            apiRooms.map(r => ({
+              id: r.room_id,
+              name: r.room,
+              capacity: r.capacity,
+              bookings: r.bookings.map(b => ({
+                id: b.id,
+                start_at: dayjs(b.start_at),
+                end_at: dayjs(b.end_at),
+                title: b.meeting_title
+              }))
+            }))
+          );
+        }
 
       })
       .catch(err => console.error(err));
 
   }, [currentDate]);
+
+  useEffect(() => {
+    if (defaultRoom) {
+      setRoomFilter(defaultRoom.name);
+    } else {
+      setRoomFilter("");
+    }
+  }, [defaultRoom]);
 
   const formatRoomData = (data, rooms) => {
     return {
@@ -170,6 +210,14 @@ export function CheckMeetingRoom({ open, onClose }) {
       year: now.getFullYear(),
       month: now.getMonth()
     });
+
+    const todayDay = now.getDate();
+    if (rowRefs.current[todayDay]) {
+      rowRefs.current[todayDay].scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }
   };
 
   // FILTER ROOM
@@ -265,6 +313,7 @@ export function CheckMeetingRoom({ open, onClose }) {
             onCellClick={handleCellClick}
             useState={useState}
             useMemo={useMemo}
+            rowRefs={rowRefs}
             onEditBooking={(booking) => {
               const roomInfo = roomData.stats.find(r => r.room === booking.room);
 
@@ -295,7 +344,7 @@ export function CheckMeetingRoom({ open, onClose }) {
             onClose={() => setEditBooking(null)}
             onSave={handleEditBooking}
             onDelete={handleDeleteBooking}
-            isOverlapping={isOverlapping} 
+            isOverlapping={isOverlapping}
           />
         )}
 
