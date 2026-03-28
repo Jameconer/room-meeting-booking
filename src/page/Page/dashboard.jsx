@@ -156,7 +156,7 @@ export function MeetingRoomDashboard() {
               {/* IMAGE */}
               <div className="relative">
                 <img
-                  src={`${import.meta.env.VITE_IMG_RoomMeeting}/1.png`}
+                  src={`${import.meta.env.VITE_IMG_RoomMeeting}/thumbnail.png`}
                   className="h-40 w-full object-cover"
                 />
             
