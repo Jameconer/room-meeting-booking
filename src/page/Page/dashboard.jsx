@@ -156,7 +156,7 @@ export function MeetingRoomDashboard() {
               {/* IMAGE */}
               <div className="relative">
                 <img
-                  src=""
+                  src={`http://sricha-intranet/file/UploadFile/Utility/Meeting_Rooms/1/1.png`}
                   className="h-40 w-full object-cover"
                 />
 
@@ -166,7 +166,7 @@ export function MeetingRoomDashboard() {
                   <h2 className="font-semibold">{room.name}</h2>
                   <p className="text-xs">{room.capacity} คน</p>
 
-                {/* เผื่อไว้ */}
+                  {/* เผื่อไว้ */}
                   <p className="text-[14px] mt-1 px-1 py-[0.5px] bg-[#3b2b83] rounded inline-block">
                     Sriracha Construction Public Company Limited
                   </p>
