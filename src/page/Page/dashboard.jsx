@@ -11,6 +11,8 @@ export function MeetingRoomDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
 
+  const [roomImages, setRoomImages] = useState({});
+
   // -------- SELECT TIME --------
   const [selectedStart, setSelectedStart] = useState(dayjs());
   const [selectedEnd, setSelectedEnd] = useState(dayjs().add(1, "hour"));
@@ -198,15 +200,17 @@ export function MeetingRoomDashboard() {
                 setOpenImagePopup(true);
               }}
               key={room.id}
-              className="bg-white rounded-2xl border hover:shadow-xl transition overflow-hidden"
-            >
+              className="group bg-white rounded-2xl border overflow-hidden cursor-pointer transition-all duration-300 
+                         hover:shadow-2xl hover:-translate-y-1 hover:border-blue-400
+                        ">
 
               {/* IMAGE */}
-              <div className="relative">
+              < div className="relative" >
                 <img
                   src={`${import.meta.env.VITE_IMG_RoomMeeting}/${room.id}/thumbnail.jpg`}
                   className="h-40 w-full object-cover cursor-pointer"
                   onClick={() => {
+                    e.stopPropagation();
                     setActiveRoom(room);
                     setOpenImagePopup(true);
                   }}
@@ -321,7 +325,8 @@ export function MeetingRoomDashboard() {
                 {/* BUTTON */}
                 {available && (
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedRoomForBooking(room);
                       setOpenAddPopup(true);
                     }}
@@ -335,10 +340,10 @@ export function MeetingRoomDashboard() {
           );
         })}
 
-      </div>
+      </div >
 
       {/* POPUP */}
-      <CheckMeetingRoom
+      < CheckMeetingRoom
         open={openAddPopup}
         onClose={() => {
           setOpenAddPopup(false);
@@ -401,18 +406,20 @@ export function MeetingRoomDashboard() {
         </div>
       )}
 
-      {zoomImage && (
-        <div
-          className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center"
-          onClick={() => setZoomImage(null)}
-        >
-          <img
-            src={zoomImage}
-            onClick={(e) => e.stopPropagation()}
-            className="max-w-[95%] max-h-[95%] rounded-2xl shadow-2xl animate-zoomIn"
-          />
-        </div>
-      )}
+      {
+        zoomImage && (
+          <div
+            className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center"
+            onClick={() => setZoomImage(null)}
+          >
+            <img
+              src={zoomImage}
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-[95%] max-h-[95%] rounded-2xl shadow-2xl animate-zoomIn"
+            />
+          </div>
+        )
+      }
 
     </div >
   );
