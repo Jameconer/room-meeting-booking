@@ -4,7 +4,7 @@ import { MonthlySchedule } from "./monthlySchedule";
 import { EditBooking } from "./editFormBooking";
 import dayjs from "dayjs";
 
-export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded }) {
+export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
 
   const [roomData, setRoomData] = useState({ stats: [] });
   const [allRooms, setAllRooms] = useState([]);

@@ -14,7 +14,53 @@ export function MeetingRoomDashboard() {
   // -------- SELECT TIME --------
   const [selectedStart, setSelectedStart] = useState(dayjs());
   const [selectedEnd, setSelectedEnd] = useState(dayjs().add(1, "hour"));
-  const [selectedImage, setSelectedImage] = useState(null);
+
+  const [openImagePopup, setOpenImagePopup] = useState(false);
+  const [activeRoom, setActiveRoom] = useState(null);
+
+  const [images, setImages] = useState([]);
+  const [zoomImage, setZoomImage] = useState(null);
+
+  useEffect(() => {
+    if (!activeRoom) return;
+
+    const fetchImages = async () => {
+      try {
+        const res = await fetch(
+          "http://192.168.16.203:8090/api/file/getfilebypath",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              path: `D:\\Intranet\\Intranet_File\\UploadFile\\Utility\\Meeting_Rooms\\${activeRoom.id}`
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        console.log("API RESPONSE =", data);
+
+        const files = (data || [])
+          .filter(f => f.type === "file")
+          .map(f => f.name)
+          .filter(name => name !== "thumbnail.jpg")
+          .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+          .map(name =>
+            `${import.meta.env.VITE_IMG_RoomMeeting}/${activeRoom.id}/${name}`
+          );
+
+        setImages(files);
+
+      } catch (err) {
+        console.error("ERROR =", err);
+      }
+    };
+
+    fetchImages();
+  }, [activeRoom]);
 
   const allEquipment = ["TV", "Projector", "Speaker", "Zoom", "Whiteboard"];
 
@@ -147,6 +193,10 @@ export function MeetingRoomDashboard() {
 
           return (
             <div
+              onClick={() => {
+                setActiveRoom(room);
+                setOpenImagePopup(true);
+              }}
               key={room.id}
               className="bg-white rounded-2xl border hover:shadow-xl transition overflow-hidden"
             >
@@ -154,10 +204,13 @@ export function MeetingRoomDashboard() {
               {/* IMAGE */}
               <div className="relative">
                 <img
-                  src={`${import.meta.env.VITE_IMG_RoomMeeting}/thumbnail.jpg`}
-                  className="h-40 w-full object-cover"
+                  src={`${import.meta.env.VITE_IMG_RoomMeeting}/${room.id}/thumbnail.jpg`}
+                  className="h-40 w-full object-cover cursor-pointer"
+                  onClick={() => {
+                    setActiveRoom(room);
+                    setOpenImagePopup(true);
+                  }}
                 />
-
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
 
@@ -294,6 +347,63 @@ export function MeetingRoomDashboard() {
         onDataLoaded={setRoomData}
         defaultRoom={selectedRoomForBooking}
       />
+
+      {openImagePopup && activeRoom && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+
+          <div className="bg-white w-[95%] max-w-6xl rounded-3xl p-6 relative shadow-2xl animate-fadeIn">
+
+            {/* ปิด */}
+            <button
+              onClick={() => setOpenImagePopup(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-black text-xl"
+            >
+              ✕
+            </button>
+
+            {/* ชื่อห้อง */}
+            <h2 className="text-2xl font-bold mb-5">
+              {activeRoom.name}
+            </h2>
+
+            {/* รูปทั้งหมด */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
+
+              {images.map((img, i) => (
+                <div
+                  key={i}
+                  className="group relative overflow-hidden rounded-2xl cursor-pointer"
+                  onClick={() => setZoomImage(img)}
+                >
+                  <img
+                    src={img}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-56 object-cover transition duration-200 group-hover:scale-110"
+                  />
+
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                    <span className="text-white text-sm">ขยาย</span>
+                  </div>
+                </div>
+              ))}
+
+              {zoomImage && (
+                <div
+                  className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center"
+                  onClick={() => setZoomImage(null)}
+                >
+                  <img
+                    src={zoomImage}
+                    className="max-w-[95%] max-h-[95%] rounded-2xl shadow-2xl animate-zoomIn"
+                  />
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
 
     </div >
   );
