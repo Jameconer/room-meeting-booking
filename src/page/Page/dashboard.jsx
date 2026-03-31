@@ -349,9 +349,16 @@ export function MeetingRoomDashboard() {
       />
 
       {openImagePopup && activeRoom && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center"
+          onClick={() => setOpenImagePopup(false)}
+        >
 
-          <div className="bg-white w-[95%] max-w-6xl rounded-3xl p-6 relative shadow-2xl animate-fadeIn">
+          {/* กล่อง popup */}
+          <div
+            className="bg-white w-[95%] max-w-6xl rounded-3xl p-6 relative shadow-2xl animate-fadeIn"
+            onClick={(e) => e.stopPropagation()}
+          >
 
             {/* ปิด */}
             <button
@@ -362,7 +369,8 @@ export function MeetingRoomDashboard() {
             </button>
 
             {/* ชื่อห้อง */}
-            <h2 className="text-2xl font-bold mb-5">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-gray-800 tracking-tight flex items-center gap-2">
+              <span className="inline-block w-1.5 h-6 bg-blue-500 rounded-full"></span>
               {activeRoom.name}
             </h2>
 
@@ -388,20 +396,21 @@ export function MeetingRoomDashboard() {
                 </div>
               ))}
 
-              {zoomImage && (
-                <div
-                  className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center"
-                  onClick={() => setZoomImage(null)}
-                >
-                  <img
-                    src={zoomImage}
-                    className="max-w-[95%] max-h-[95%] rounded-2xl shadow-2xl animate-zoomIn"
-                  />
-                </div>
-              )}
-
             </div>
           </div>
+        </div>
+      )}
+
+      {zoomImage && (
+        <div
+          className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center"
+          onClick={() => setZoomImage(null)}
+        >
+          <img
+            src={zoomImage}
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-[95%] max-h-[95%] rounded-2xl shadow-2xl animate-zoomIn"
+          />
         </div>
       )}
 
