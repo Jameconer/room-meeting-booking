@@ -36,11 +36,17 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
       .then(data => {
         const apiRooms = data.data || [];
 
-        const roomNames = apiRooms.map(r => r.room);
-        setAllRooms(prev => [...new Set([...prev, ...roomNames])]);
+        const dedupedRooms = Array.from(
+          new Map(apiRooms.map(r => [r.room_id, r])).values()
+        );
+
+        const roomNames = dedupedRooms.map(r => r.room);
+        setAllRooms([...new Set(roomNames)]);
+
+        console.log("Fetched rooms:", dedupedRooms);
 
         const formatted = {
-          stats: apiRooms.map((r, index) => ({
+          stats: dedupedRooms.map((r) => ({
             room: r.room,
             room_id: r.room_id,
             capacity: r.capacity,
@@ -62,7 +68,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
 
         if (onDataLoaded) {
           onDataLoaded(
-            apiRooms.map(r => ({
+            dedupedRooms.map(r => ({
               id: r.room_id,
               name: r.room,
               capacity: r.capacity,
@@ -195,7 +201,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
   };
 
   // FILTER ROOM
-  const displayRooms = roomData.stats.map(r => r.room).filter((room) => {
+  const displayRooms = [...new Set(roomData.stats.map(r => r.room))].filter((room) => {
 
     if (activeTab === "training") return room.includes("ห้องอบรม");
     if (activeTab === "meeting") return !room.includes("ห้องอบรม");

@@ -233,8 +233,8 @@ export function MonthlySchedule({
               className="border p-1 rounded text-sm"
             >
               <option value="">ทั้งหมด</option>
-              {displayRooms.map((room) => (
-                <option key={room} value={room}>{room}</option>
+              {displayRooms.map((room, idx) => (
+                <option key={`${room}-${idx}`} value={room}>{room}</option>
               ))}
             </select>
 
@@ -264,7 +264,7 @@ export function MonthlySchedule({
 
                 return (
                   <th
-                    key={room}
+                    key={`${room}-${index}`}
                     className={`border min-w-[140px] ${theme.header}`}
                   >
                     {room}

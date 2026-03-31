@@ -36,6 +36,14 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
       toast.error("เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุด");
       return;
     }
+
+    const earliestStart = new Date(`${form.date}T08:00`);
+    const latestEnd = new Date(`${form.date}T17:00`);
+
+    if (new Date(start_at) < earliestStart || new Date(end_at) > latestEnd) {
+      toast.error("ช่วงเวลาที่สามารถจองได้คือ 08:00 - 17:00");
+      return;
+    }
     
     const isConflict = isOverlapping(
       `${form.date}T${form.startTime}`,

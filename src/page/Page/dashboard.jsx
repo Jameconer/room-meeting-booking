@@ -23,19 +23,17 @@ export function MeetingRoomDashboard() {
 
   const [activeTab, setActiveTab] = useState("all");
 
-  const filteredRooms = roomData.filter((room) => {
-
+  const filteredRooms = Array.from(
+    new Map(
+      roomData.map(r => [r.id, r]) // Map เก็บแค่ id เดียว
+    ).values()
+  ).filter(room => {
     if (activeTab === "all") return true;
-
-    if (activeTab === "meeting") {
-      return room.name.includes("ประชุม");
-    }
-
-    if (activeTab === "training") {
-      return room.name.includes("อบรม");
-    }
-
+    if (activeTab === "meeting") return room.name.includes("ประชุม");
+    if (activeTab === "training") return room.name.includes("อบรม");
+    return false;
   });
+
 
   useEffect(() => {
     if (!activeRoom) return;
@@ -94,12 +92,6 @@ export function MeetingRoomDashboard() {
       setLoading(false);
     }
   }, [roomData]);
-
-  useEffect(() => {
-    if (selectedStart.isAfter(selectedEnd)) {
-      setSelectedEnd(selectedStart.add(1, "hour"));
-    }
-  }, [selectedStart]);
 
   // -------- CHECK AVAILABLE --------
   const isRoomAvailable = (room) => {
@@ -239,8 +231,7 @@ export function MeetingRoomDashboard() {
           <div className="col-span-full text-center text-gray-500">
             Loading...
           </div>
-        ) : filteredRooms.map((room) => {
-
+        ) : filteredRooms.map((room, idx) => {
           const { current, next, roomBookings } = getRoomStatus(room);
           const available = isRoomAvailable(room);
 
@@ -250,7 +241,7 @@ export function MeetingRoomDashboard() {
                 setActiveRoom(room);
                 setOpenImagePopup(true);
               }}
-              key={room.id}
+              key={`${room.id}-${idx}`}
               className="group bg-white rounded-2xl border overflow-hidden cursor-pointer transition-all duration-300 
                          hover:shadow-2xl hover:-translate-y-1 hover:border-blue-400
                         ">
@@ -260,7 +251,7 @@ export function MeetingRoomDashboard() {
                 <img
                   src={`${import.meta.env.VITE_IMG_RoomMeeting}/${room.id}/thumbnail.jpg`}
                   className="h-40 w-full object-cover cursor-pointer"
-                  onClick={() => {
+                  onClick={(e) => {
                     e.stopPropagation();
                     setActiveRoom(room);
                     setOpenImagePopup(true);
