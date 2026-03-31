@@ -42,9 +42,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
 
         const roomNames = dedupedRooms.map(r => r.room);
         setAllRooms([...new Set(roomNames)]);
-
-        console.log("Fetched rooms:", dedupedRooms);
-
+        
         const formatted = {
           stats: dedupedRooms.map((r) => ({
             room: r.room,

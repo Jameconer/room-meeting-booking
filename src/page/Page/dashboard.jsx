@@ -23,6 +23,8 @@ export function MeetingRoomDashboard() {
 
   const [activeTab, setActiveTab] = useState("all");
 
+  const [roomImageCache, setRoomImageCache] = useState({});
+
   const filteredRooms = Array.from(
     new Map(
       roomData.map(r => [r.id, r]) // Map เก็บแค่ id เดียว
@@ -34,6 +36,25 @@ export function MeetingRoomDashboard() {
     return false;
   });
 
+  useEffect(() => {
+    const uncachedRooms = filteredRooms.filter(room => !roomImageCache[room.id]);
+    if (uncachedRooms.length === 0) return;
+
+    uncachedRooms.forEach(room => {
+      const thumbnailUrl = `${import.meta.env.VITE_IMG_RoomMeeting}/${room.id}/thumbnail.jpg`;
+      const img = new Image();
+
+      img.onload = () => {
+        setRoomImageCache(prev => ({ ...prev, [room.id]: thumbnailUrl }));
+      };
+
+      img.onerror = () => {
+        setRoomImageCache(prev => ({ ...prev, [room.id]: import.meta.env.VITE_IMG_RoomMeetingDefault }));
+      };
+
+      img.src = thumbnailUrl;
+    });
+  }, [filteredRooms, roomImageCache]);
 
   useEffect(() => {
     if (!activeRoom) return;
@@ -247,9 +268,9 @@ export function MeetingRoomDashboard() {
                         ">
 
               {/* IMAGE */}
-              < div className="relative" >
+              <div className="relative">
                 <img
-                  src={`${import.meta.env.VITE_IMG_RoomMeeting}/${room.id}/thumbnail.jpg`}
+                  src={roomImageCache[room.id] || import.meta.env.VITE_IMG_RoomMeetingDefault}
                   className="h-40 w-full object-cover cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
