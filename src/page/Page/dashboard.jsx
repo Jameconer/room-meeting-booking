@@ -11,8 +11,6 @@ export function MeetingRoomDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
 
-  const [roomImages, setRoomImages] = useState({});
-
   // -------- SELECT TIME --------
   const [selectedStart, setSelectedStart] = useState(dayjs());
   const [selectedEnd, setSelectedEnd] = useState(dayjs().add(1, "hour"));
@@ -42,8 +40,6 @@ export function MeetingRoomDashboard() {
         );
 
         const data = await res.json();
-
-        console.log("API RESPONSE =", data);
 
         const files = (data || [])
           .filter(f => f.type === "file")
@@ -204,8 +200,8 @@ export function MeetingRoomDashboard() {
                          hover:shadow-2xl hover:-translate-y-1 hover:border-blue-400
                         ">
 
-              {/* IMAGE */}
-              < div className="relative" >
+            {/* IMAGE */ }
+            < div className = "relative" >
                 <img
                   src={`${import.meta.env.VITE_IMG_RoomMeeting}/${room.id}/thumbnail.jpg`}
                   className="h-40 w-full object-cover cursor-pointer"
@@ -237,189 +233,189 @@ export function MeetingRoomDashboard() {
                 </div>
               </div>
 
-              {/* CONTENT */}
-              <div className="p-4">
+      {/* CONTENT */}
+      <div className="p-4">
 
-                {/* CURRENT */}
-                {current && (
-                  <div className="mb-2">
-                    <p className="text-xs text-gray-400">Now</p>
-                    <p className="text-sm font-medium">{current.title}</p>
-                    <p className="text-xs text-gray-400">
-                      {current.start_at.format("HH:mm")} - {current.end_at.format("HH:mm")}
-                    </p>
-                  </div>
-                )}
+        {/* CURRENT */}
+        {current && (
+          <div className="mb-2">
+            <p className="text-xs text-gray-400">Now</p>
+            <p className="text-sm font-medium">{current.title}</p>
+            <p className="text-xs text-gray-400">
+              {current.start_at.format("HH:mm")} - {current.end_at.format("HH:mm")}
+            </p>
+          </div>
+        )}
 
-                {/* NEXT */}
-                {next && (
-                  <div className="mb-3">
-                    <p className="text-xs text-gray-400">Next</p>
-                    <p className="text-sm">{next.title}</p>
-                    <p className="text-xs text-gray-400">
-                      {next.start_at.format("HH:mm")}
-                    </p>
-                  </div>
-                )}
+        {/* NEXT */}
+        {next && (
+          <div className="mb-3">
+            <p className="text-xs text-gray-400">Next</p>
+            <p className="text-sm">{next.title}</p>
+            <p className="text-xs text-gray-400">
+              {next.start_at.format("HH:mm")}
+            </p>
+          </div>
+        )}
 
-                {/* TIMELINE */}
-                <div className="relative">
+        {/* TIMELINE */}
+        <div className="relative">
 
-                  <div className="relative h-1.5 bg-green-100 rounded-full overflow-hidden">
+          <div className="relative h-1.5 bg-green-100 rounded-full overflow-hidden">
 
-                    {roomBookings
-                      .filter(b =>
-                        b.start_at.isSame(selectedStart, "day")
-                      )
-                      .map((b, i) => {
+            {roomBookings
+              .filter(b =>
+                b.start_at.isSame(selectedStart, "day")
+              )
+              .map((b, i) => {
 
-                        const start = b.start_at.hour();
-                        const end = b.end_at.hour();
+                const start = b.start_at.hour();
+                const end = b.end_at.hour();
 
-                        const safeStart = Math.max(start, 8);
-                        const safeEnd = Math.min(end, 17);
+                const safeStart = Math.max(start, 8);
+                const safeEnd = Math.min(end, 17);
 
-                        if (safeEnd <= safeStart) return null;
+                if (safeEnd <= safeStart) return null;
 
-                        return (
-                          <div
-                            key={i}
-                            className="absolute top-0 h-full bg-red-500/80 rounded-full"
-                            style={{
-                              left: `${((safeStart - 8) / 9) * 100}%`,
-                              width: `${((safeEnd - safeStart) / 9) * 100}%`
-                            }}
-                          />
-                        );
-                      })}
-                  </div>
-
-                  <div className="flex justify-between text-[10px] text-gray-400 mt-2 px-1">
-                    <span>08:00</span>
-                    <span>10:00</span>
-                    <span>12:00</span>
-                    <span>14:00</span>
-                    <span>17:00</span>
-                  </div>
-
-                </div>
-
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {demoEquipment.map((eq, i) => (
-                    <span
-                      key={i}
-                      className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-gray-50 text-gray-700 border"
-                    >
-                      {eq === "TV" && "📺"}
-                      {eq === "Projector" && "📽️"}
-                      {eq === "Speaker" && "🔊"}
-                      {eq === "Zoom" && "💻"}
-                      {eq === "Whiteboard" && "📝"}
-                      {eq === "Camera" && "📷"}
-                      {eq === "Mic" && "🎤"}
-                      {eq}
-                    </span>
-                  ))}
-                </div>
-
-                {/* BUTTON */}
-                {available && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedRoomForBooking(room);
-                      setOpenAddPopup(true);
+                return (
+                  <div
+                    key={i}
+                    className="absolute top-0 h-full bg-red-500/80 rounded-full"
+                    style={{
+                      left: `${((safeStart - 8) / 9) * 100}%`,
+                      width: `${((safeEnd - safeStart) / 9) * 100}%`
                     }}
-                    className="mt-4 w-full border border-gray-300 py-2 rounded-xl hover:bg-gray-900 hover:text-white transition"
-                  >
-                    จองห้องนี้
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
+                  />
+                );
+              })}
+          </div>
+
+          <div className="flex justify-between text-[10px] text-gray-400 mt-2 px-1">
+            <span>08:00</span>
+            <span>10:00</span>
+            <span>12:00</span>
+            <span>14:00</span>
+            <span>17:00</span>
+          </div>
+
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-5">
+          {demoEquipment.map((eq, i) => (
+            <span
+              key={i}
+              className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-gray-50 text-gray-700 border"
+            >
+              {eq === "TV" && "📺"}
+              {eq === "Projector" && "📽️"}
+              {eq === "Speaker" && "🔊"}
+              {eq === "Zoom" && "💻"}
+              {eq === "Whiteboard" && "📝"}
+              {eq === "Camera" && "📷"}
+              {eq === "Mic" && "🎤"}
+              {eq}
+            </span>
+          ))}
+        </div>
+
+        {/* BUTTON */}
+        {available && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedRoomForBooking(room);
+              setOpenAddPopup(true);
+            }}
+            className="mt-4 w-full border border-gray-300 py-2 rounded-xl hover:bg-gray-900 hover:text-white transition"
+          >
+            จองห้องนี้
+          </button>
+        )}
+      </div>
+    </div>
+  );
+})}
 
       </div >
 
-      {/* POPUP */}
-      < CheckMeetingRoom
-        open={openAddPopup}
-        onClose={() => {
-          setOpenAddPopup(false);
-          setSelectedRoomForBooking(null);
-        }}
-        onDataLoaded={setRoomData}
-        defaultRoom={selectedRoomForBooking}
-      />
+  {/* POPUP */ }
+  < CheckMeetingRoom
+open = { openAddPopup }
+onClose = {() => {
+  setOpenAddPopup(false);
+  setSelectedRoomForBooking(null);
+}}
+onDataLoaded = { setRoomData }
+defaultRoom = { selectedRoomForBooking }
+  />
 
-      {openImagePopup && activeRoom && (
-        <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center"
+  { openImagePopup && activeRoom && (
+    <div
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center"
+      onClick={() => setOpenImagePopup(false)}
+    >
+
+      {/* กล่อง popup */}
+      <div
+        className="bg-white w-[95%] max-w-6xl rounded-3xl p-6 relative shadow-2xl animate-fadeIn"
+        onClick={(e) => e.stopPropagation()}
+      >
+
+        {/* ปิด */}
+        <button
           onClick={() => setOpenImagePopup(false)}
+          className="absolute top-4 right-4 text-gray-500 hover:text-black text-xl"
         >
+          ✕
+        </button>
 
-          {/* กล่อง popup */}
-          <div
-            className="bg-white w-[95%] max-w-6xl rounded-3xl p-6 relative shadow-2xl animate-fadeIn"
-            onClick={(e) => e.stopPropagation()}
-          >
+        {/* ชื่อห้อง */}
+        <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-gray-800 tracking-tight flex items-center gap-2">
+          <span className="inline-block w-1.5 h-6 bg-blue-500 rounded-full"></span>
+          {activeRoom.name}
+        </h2>
 
-            {/* ปิด */}
-            <button
-              onClick={() => setOpenImagePopup(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-black text-xl"
+        {/* รูปทั้งหมด */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
+
+          {images.map((img, i) => (
+            <div
+              key={i}
+              className="group relative overflow-hidden rounded-2xl cursor-pointer"
+              onClick={() => setZoomImage(img)}
             >
-              ✕
-            </button>
+              <img
+                src={img}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-56 object-cover transition duration-200 group-hover:scale-110"
+              />
 
-            {/* ชื่อห้อง */}
-            <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-gray-800 tracking-tight flex items-center gap-2">
-              <span className="inline-block w-1.5 h-6 bg-blue-500 rounded-full"></span>
-              {activeRoom.name}
-            </h2>
-
-            {/* รูปทั้งหมด */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 max-h-[70vh] overflow-y-auto pr-2">
-
-              {images.map((img, i) => (
-                <div
-                  key={i}
-                  className="group relative overflow-hidden rounded-2xl cursor-pointer"
-                  onClick={() => setZoomImage(img)}
-                >
-                  <img
-                    src={img}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-56 object-cover transition duration-200 group-hover:scale-110"
-                  />
-
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                    <span className="text-white text-sm">ขยาย</span>
-                  </div>
-                </div>
-              ))}
-
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                <span className="text-white text-sm">ขยาย</span>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          ))}
 
-      {
-        zoomImage && (
-          <div
-            className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center"
-            onClick={() => setZoomImage(null)}
-          >
-            <img
-              src={zoomImage}
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-[95%] max-h-[95%] rounded-2xl shadow-2xl animate-zoomIn"
-            />
-          </div>
-        )
-      }
+        </div>
+      </div>
+    </div>
+  )}
+
+{
+  zoomImage && (
+    <div
+      className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center"
+      onClick={() => setZoomImage(null)}
+    >
+      <img
+        src={zoomImage}
+        onClick={(e) => e.stopPropagation()}
+        className="max-w-[95%] max-h-[95%] rounded-2xl shadow-2xl animate-zoomIn"
+      />
+    </div>
+  )
+}
 
     </div >
   );

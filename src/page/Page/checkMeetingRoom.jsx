@@ -36,8 +36,6 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
       .then(data => {
         const apiRooms = data.data || [];
 
-        console.log("API Rooms:", apiRooms);
-
         const roomNames = apiRooms.map(r => r.room);
         setAllRooms(prev => [...new Set([...prev, ...roomNames])]);
 
