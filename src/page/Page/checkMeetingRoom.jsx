@@ -18,7 +18,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
     year: today.getFullYear(),
     month: today.getMonth()
   });
-
+      
   useEffect(() => {
 
     const monthStr = `${currentDate.year}-${String(currentDate.month + 1).padStart(2, "0")}`;
@@ -44,7 +44,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
             room: r.room,
             room_id: r.room_id,
             capacity: r.capacity,
-            location: "",
+            location: r.full_name_th,
             equipment: "",
 
             bookings: r.bookings.map(b => ({
@@ -66,6 +66,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
               id: r.room_id,
               name: r.room,
               capacity: r.capacity,
+              location: r.full_name_th,
               bookings: r.bookings.map(b => ({
                 id: b.id,
                 start_at: dayjs(b.start_at),
@@ -88,33 +89,6 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
       setRoomFilter("");
     }
   }, [defaultRoom]);
-
-  const formatRoomData = (data, rooms) => {
-    return {
-      stats: rooms.map(roomName => {
-
-        const found = data.find(r => r.room === roomName);
-
-        return {
-          room: roomName,
-          room_id: found?.room_id,
-          capacity: found?.capacity || 0,
-          bookings: found
-            ? found.bookings.map(b => ({
-              id: b.id,
-              startDateTime: b.start_at,
-              endDateTime: b.end_at,
-              title: b.meeting_title || "",
-              job: "",
-              description: b.meeting_description || "",
-              attendee: b.attendee_count ?? 0,
-            }))
-            : []
-        };
-
-      })
-    };
-  };
 
   const tableRef = useRef(null);
 
