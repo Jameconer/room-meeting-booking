@@ -6,6 +6,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     // allowedHosts: ['Accident Report'],
-    port: 443, // ตั้งพอร์ตเป็น 8080
+    port: 8098, // ตั้งพอร์ตเป็น 8080
   },
 })
