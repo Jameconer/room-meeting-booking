@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleUser } from "@fortawesome/free-solid-svg-icons";
 import { useState, useEffect, useRef } from "react";
 import { Profile } from "./profile";
-
+import { Logout } from "../Login/logout";
 export function Navbar({ title = "Meeting Room" }) {
 
     const [open, setOpen] = useState(false);
@@ -27,8 +27,8 @@ export function Navbar({ title = "Meeting Room" }) {
             <h2 className="text-2xl font-bold tracking-wide">
                 {title}
             </h2>
-
-            <div ref={ref} className="relative">
+            <Logout />
+            {/* <div ref={ref} className="relative">
 
                 <button
                     onClick={() => setOpen(!open)}
@@ -42,7 +42,7 @@ export function Navbar({ title = "Meeting Room" }) {
                         <Profile />
                     </div>
                 )}
-            </div>
+            </div> */}
 
         </div>
     );

@@ -4,6 +4,7 @@ import MyProvider from './Components/context/contextapp.jsx';
 import createAppRouter from './Router/router.jsx';
 import { Toaster } from 'react-hot-toast';
 import './index.css';
+import '../src/Router/interceptores.jsx'
 
 const router = createAppRouter();
 
