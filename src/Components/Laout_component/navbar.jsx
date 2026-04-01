@@ -29,9 +29,10 @@ export function Navbar({ title = "Meeting Room" }) {
                     src={import.meta.env.VITE_IMG_RoomMeetingLogo}
                     className="auto h-10 rounded-full"
                 />
-                <h2 className="text-2xl font-bold tracking-wide">
+                <h2 className="text-2xl font-bold tracking-wide bg-gradient-to-r from-blue-400 via-red-400 to-yellow-300 bg-clip-text text-transparent">
                     {title}
                 </h2>
+
             </div>
 
             <Logout />
