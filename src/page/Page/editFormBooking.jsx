@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapping }) {
   const [showConfirm, setShowConfirm] = useState(false);
+  const [createdBy, setCreatedBy] = useState("");
 
   const [form, setForm] = useState({
     id: "",
@@ -32,6 +33,13 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
       });
     }
   }, [bookingData]);
+
+  useEffect(() => {
+    const email = localStorage.getItem("email");
+    if (email) {
+      setCreatedBy(email);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,8 +82,8 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
       meeting_description: form.description,
       job: form.job,
       attendee_count: Number(form.attendee) || 0,
-      updated_by: 70,
-      updated_at: new Date().toISOString()
+      updated_by: createdBy,
+      updated_at: new Date().toISOString().slice(0, 19)
     };
 
     try {
@@ -87,6 +95,8 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
           body: JSON.stringify(payload)
         }
       );
+
+      console.log("Server response:", payload);
 
       if (!res.ok) {
         const text = await res.text();

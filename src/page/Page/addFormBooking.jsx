@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 
 export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
 
+  const [createdBy, setCreatedBy] = useState("");
+
   const [form, setForm] = useState({
     roomName: roomData.room,
     room_id: roomData.room_id,
@@ -17,6 +19,13 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
     attendee: roomData.existing?.attendee || "",
     isEditing: roomData.isEditing || false
   });
+
+  useEffect(() => {
+    const email = localStorage.getItem("email");
+    if (email) {
+      setCreatedBy(email);
+    }
+  }, []);
 
   const handleChange = (e) => {
     setForm({
@@ -64,7 +73,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
       meeting_description: form.description,
       job: form.job,
       attendee_count: Number(form.attendee) || 0,
-      created_by: 70
+      created_by: createdBy
     };
 
     try {

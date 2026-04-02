@@ -98,8 +98,8 @@ export default function Login() {
                 timerProgressBar: true,
                 didClose: () => {
                     setAccessToken(res.data.token);
-                    // localStorage.setItem("token", res.data.token);
-                    // localStorage.setItem("email", email); // ✅ บันทึกอีเมลไว้
+                    localStorage.setItem("token", res.data.token);
+                    localStorage.setItem("email", email);
                     // console.log(res.data.token);
                     navigate(`/List_RoomMeeting`);
 
