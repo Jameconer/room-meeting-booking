@@ -27,7 +27,7 @@ export function MeetingRoomDashboard() {
 
   const filteredRooms = Array.from(
     new Map(
-      roomData.map(r => [r.id, r]) 
+      roomData.map(r => [r.id, r])
     ).values()
   ).filter(room => {
     if (activeTab === "all") return true;
@@ -37,33 +37,61 @@ export function MeetingRoomDashboard() {
   });
 
   useEffect(() => {
-    if (location.state?.updated) {
-      fetchRoomData();
-    }
-  }, [location.state]);
+    if (!activeRoom) return;
 
-  useEffect(() => {
-    const today = dayjs();
-    const monthStr = today.format("YYYY-MM");
-
-    fetch("http://192.168.16.203:8090/api/booking/get_meeting_rooms_booking", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        month: monthStr,
-      }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        const apiRooms = data.data || [];
-
-        const dedupedRooms = Array.from(
-          new Map(apiRooms.map(r => [r.room_id, r])).values()
+    const fetchImages = async () => {
+      try {
+        const res = await fetch(
+          "http://192.168.16.203:8090/api/file/getfilebypath",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              path: `D:\\Intranet\\Intranet_File\\UploadFile\\Utility\\Meeting_Rooms\\${activeRoom.id}`
+            }),
+          }
         );
 
-        const formatted = dedupedRooms.map(r => ({
+        const data = await res.json();
+
+        const files = (data || [])
+          .filter(f => f.type === "file")
+          .map(f => f.name)
+          .filter(name => name !== "thumbnail.jpg")
+          .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+          .map(name =>
+            `${import.meta.env.VITE_IMG_RoomMeeting}/${activeRoom.id}/${name}`
+          );
+
+        setImages(files);
+
+      } catch (err) {
+        console.error("ERROR =", err);
+      }
+    };
+
+    fetchImages();
+  }, [activeRoom]);
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await fetch("http://192.168.16.203:8090/api/booking/get_meeting_rooms_booking", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            month: dayjs().format("YYYY-MM")
+          })
+        });
+
+        const data = await res.json();
+        const apiRooms = data.data || [];
+
+        const formatted = apiRooms.map(r => ({
           id: r.room_id,
           name: r.room,
           capacity: r.capacity,
@@ -77,10 +105,15 @@ export function MeetingRoomDashboard() {
         }));
 
         setRoomData(formatted);
-      })
-      .catch(err => console.error(err));
-  }, []);
+        setLoading(false);
 
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchRooms();
+  }, []);
 
   useEffect(() => {
     const uncachedRooms = filteredRooms.filter(room => !roomImageCache[room.id]);

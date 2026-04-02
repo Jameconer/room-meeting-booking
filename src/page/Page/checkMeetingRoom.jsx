@@ -26,6 +26,10 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
     month: today.getMonth()
   });
 
+   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
 
     const monthStr = `${currentDate.year}-${String(currentDate.month + 1).padStart(2, "0")}`;
