@@ -310,6 +310,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded }) {
                 id: booking.id,
                 ...booking,
                 room_id: roomInfo?.room_id,
+                capacity: roomInfo?.capacity,
                 bookings: roomInfo?.bookings || []
               });
             }}

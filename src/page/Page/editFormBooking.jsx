@@ -10,7 +10,6 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
   useEffect(() => {
     api.post(import.meta.env.VITE_API_POST_Me).then((res) => {
       setuser_id(res.data.response.user_id);
-      console.log(res.data.response);
     });
 
   }, []);
@@ -32,6 +31,7 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
       setForm({
         id: bookingData.id || "",
         room: bookingData.room || "",
+        capacity: bookingData.capacity || "",
         room_id: bookingData.room_id || "",
         startDateTime: bookingData.startDateTime || "",
         endDateTime: bookingData.endDateTime || "",
@@ -43,10 +43,16 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
     }
   }, [bookingData]);
 
-  console.log("bookingData:", bookingData);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "attendee") {
+      if (Number(value) > Number(bookingData.capacity)) {
+        toast.error(`จำนวนคนห้ามเกิน ${bookingData.capacity}`);
+        return;
+      }
+    }
+
     setForm(prev => ({
       ...prev,
       [name]: value
@@ -54,6 +60,11 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
   };
 
   const handleEditBooking = async () => {
+
+    if (Number(form.attendee) > Number(bookingData.capacity)) {
+      toast.error(`จำนวนคนห้ามเกิน ${bookingData.capacity}`);
+      return;
+    }
 
     const start = new Date(form.startDateTime);
     const end = new Date(form.endDateTime);
@@ -101,8 +112,6 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
         }
       );
 
-      console.log("Server response:", payload);
-
       if (!res.ok) {
         const text = await res.text();
         console.error("Server response error:", text);
@@ -126,8 +135,6 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
       toast.error("แก้ไขไม่สำเร็จ");
     }
   };
-
-  console.log(user_id);
 
   const deleteBooking = async () => {
     try {
@@ -240,7 +247,14 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
               name="attendee"
               value={form.attendee}
               onChange={handleChange}
-              className="w-full border p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500"
+              max={bookingData.capacity}
+              onInvalid={(e) => {
+                e.target.setCustomValidity(`จำนวนคนต้องไม่เกิน ${bookingData.capacity}`);
+              }}
+              onInput={(e) => e.target.setCustomValidity("")}
+              className="w-full border border-gray-200 p-2.5 rounded-lg 
+              focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              required
             />
           </div>
 

@@ -24,7 +24,6 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
   useEffect(() => {
     api.post(import.meta.env.VITE_API_POST_Me).then((res) => {
       setuser_id(res.data.response.user_id);
-      console.log(res.data.response);
     });
 
   }, []);
@@ -92,8 +91,6 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
           body: JSON.stringify(payload)
         }
       );
-
-      console.log("Payload sent to server:", payload);
 
       if (!res.ok) {
         const text = await res.text();
@@ -248,7 +245,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
               onChange={handleChange}
               rows={3}
               className="w-full border border-gray-200 p-2.5 rounded-lg resize-none 
-          focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
@@ -266,7 +263,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
               }}
               onInput={(e) => e.target.setCustomValidity("")}
               className="w-full border border-gray-200 p-2.5 rounded-lg 
-  focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              focus:outline-none focus:ring-2 focus:ring-emerald-500"
               required
             />
           </div>
@@ -285,8 +282,8 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
             <button
               type="submit"
               className="px-4 py-2 rounded-lg bg-emerald-600 text-white 
-          hover:bg-emerald-700 transition shadow-sm"
-            >
+             hover:bg-emerald-700 transition shadow-sm"
+             >
               {form.isEditing ? "บันทึกการแก้ไข" : "บันทึก"}
             </button>
           </div>
