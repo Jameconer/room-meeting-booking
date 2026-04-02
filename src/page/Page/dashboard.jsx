@@ -329,7 +329,7 @@ export function MeetingRoomDashboard() {
                 {/* CURRENT */}
                 {current && (
                   <div className="mb-2">
-                    <p className="text-xs text-gray-400">Now</p>
+                    <p className="text-xs text-gray-400">ตอนนี้</p>
                     <p className="text-sm font-medium">{current.title}</p>
                     <p className="text-xs text-gray-400">
                       {current.start_at.format("HH:mm")} - {current.end_at.format("HH:mm")}
@@ -340,7 +340,7 @@ export function MeetingRoomDashboard() {
                 {/* NEXT */}
                 {next && (
                   <div className="mb-3">
-                    <p className="text-xs text-gray-400">Next</p>
+                    <p className="text-xs text-gray-400">รอบถัดไป</p>
                     <p className="text-sm">{next.title}</p>
                     <p className="text-xs text-gray-400">
                       {next.start_at.format("HH:mm")}
