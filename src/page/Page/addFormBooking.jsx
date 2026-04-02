@@ -67,6 +67,11 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
       return;
     }
 
+    if (Number(form.attendee) > Number(form.capacity)) {
+      toast.error(`จำนวนคนต้องไม่เกิน ${form.capacity} คน`);
+      return;
+    }
+
     const payload = {
       room_id: Number(form.room_id),
       start_at,
@@ -255,8 +260,13 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
               name="attendee"
               value={form.attendee}
               onChange={handleChange}
+              max={form.capacity}
+              onInvalid={(e) => {
+                e.target.setCustomValidity(`จำนวนคนต้องไม่เกิน ${form.capacity}`);
+              }}
+              onInput={(e) => e.target.setCustomValidity("")}
               className="w-full border border-gray-200 p-2.5 rounded-lg 
-          focus:outline-none focus:ring-2 focus:ring-emerald-500"
+  focus:outline-none focus:ring-2 focus:ring-emerald-500"
               required
             />
           </div>

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, } from "react";
 import dayjs from "dayjs";
 import { Navbar } from "../../Components/Laout_component/navbar";
 import { CheckMeetingRoom } from "./checkMeetingRoom";
-
+import axios from "axios";
 
 export function MeetingRoomDashboard() {
 
@@ -96,13 +96,20 @@ export function MeetingRoomDashboard() {
     fetchImages();
   }, [activeRoom]);
 
+  useEffect(() => {
+
+    axios.post("http://192.168.16.203:8090/api/intranet/savevisits", {
+      "APP_ID": 19
+    })
+
+  }, []);
+
   const allEquipment = ["TV", "Projector", "Speaker", "Zoom", "Whiteboard"];
 
   const demoEquipment = allEquipment
     .sort(() => 0.5 - Math.random())
     .slice(0, 3);
 
-  // กันเลือกเวลาเพี้ยน
   useEffect(() => {
     if (selectedStart.isAfter(selectedEnd)) {
       setSelectedEnd(selectedStart.add(1, "hour"));

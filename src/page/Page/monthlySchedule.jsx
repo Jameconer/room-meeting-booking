@@ -387,7 +387,7 @@ export function MonthlySchedule({
 
               {tooltip.data.job && (
                 <div className="text-gray-300">
-                  {tooltip.data.job}
+                  {tooltip.data.job} : {tooltip.data.meeting_title}
                 </div>
               )}
 
