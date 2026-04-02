@@ -3,14 +3,13 @@ import dayjs from "dayjs";
 import { Navbar } from "../../Components/Laout_component/navbar";
 import { CheckMeetingRoom } from "./checkMeetingRoom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export function MeetingRoomDashboard() {
 
-  const [openAddPopup, setOpenAddPopup] = useState(false);
+  const navigate = useNavigate();
   const [roomData, setRoomData] = useState([]);
-
   const [loading, setLoading] = useState(true);
-  const [selectedRoomForBooking, setSelectedRoomForBooking] = useState(null);
 
   // -------- SELECT TIME --------
   const [selectedStart, setSelectedStart] = useState(dayjs());
@@ -28,7 +27,7 @@ export function MeetingRoomDashboard() {
 
   const filteredRooms = Array.from(
     new Map(
-      roomData.map(r => [r.id, r]) // Map เก็บแค่ id เดียว
+      roomData.map(r => [r.id, r]) 
     ).values()
   ).filter(room => {
     if (activeTab === "all") return true;
@@ -36,6 +35,52 @@ export function MeetingRoomDashboard() {
     if (activeTab === "training") return room.name.includes("อบรม");
     return false;
   });
+
+  useEffect(() => {
+    if (location.state?.updated) {
+      fetchRoomData();
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    const today = dayjs();
+    const monthStr = today.format("YYYY-MM");
+
+    fetch("http://192.168.16.203:8090/api/booking/get_meeting_rooms_booking", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        month: monthStr,
+      }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        const apiRooms = data.data || [];
+
+        const dedupedRooms = Array.from(
+          new Map(apiRooms.map(r => [r.room_id, r])).values()
+        );
+
+        const formatted = dedupedRooms.map(r => ({
+          id: r.room_id,
+          name: r.room,
+          capacity: r.capacity,
+          location: r.full_name_th,
+          bookings: r.bookings.map(b => ({
+            id: b.id,
+            start_at: dayjs(b.start_at),
+            end_at: dayjs(b.end_at),
+            title: b.meeting_title
+          }))
+        }));
+
+        setRoomData(formatted);
+      })
+      .catch(err => console.error(err));
+  }, []);
+
 
   useEffect(() => {
     const uncachedRooms = filteredRooms.filter(room => !roomImageCache[room.id]);
@@ -58,45 +103,6 @@ export function MeetingRoomDashboard() {
   }, [filteredRooms, roomImageCache]);
 
   useEffect(() => {
-    if (!activeRoom) return;
-
-    const fetchImages = async () => {
-      try {
-        const res = await fetch(
-          "http://192.168.16.203:8090/api/file/getfilebypath",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              path: `D:\\Intranet\\Intranet_File\\UploadFile\\Utility\\Meeting_Rooms\\${activeRoom.id}`
-            }),
-          }
-        );
-
-        const data = await res.json();
-
-        const files = (data || [])
-          .filter(f => f.type === "file")
-          .map(f => f.name)
-          .filter(name => name !== "thumbnail.jpg")
-          .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-          .map(name =>
-            `${import.meta.env.VITE_IMG_RoomMeeting}/${activeRoom.id}/${name}`
-          );
-
-        setImages(files);
-
-      } catch (err) {
-        console.error("ERROR =", err);
-      }
-    };
-
-    fetchImages();
-  }, [activeRoom]);
-
-  useEffect(() => {
 
     axios.post("http://192.168.16.203:8090/api/intranet/savevisits", {
       "APP_ID": 19
@@ -117,9 +123,7 @@ export function MeetingRoomDashboard() {
   }, [selectedStart]);
 
   useEffect(() => {
-    if (roomData.length > 0) {
-      setLoading(false);
-    }
+    setLoading(false);
   }, [roomData]);
 
   // -------- CHECK AVAILABLE --------
@@ -163,7 +167,7 @@ export function MeetingRoomDashboard() {
       <Navbar />
 
       {/* HEADER */}
-      <div className="pt-5 px-10 flex justify-between items-center">
+      <div className="pt-11 px-10 flex justify-between items-center">
       </div>
 
       {/* TIME SELECT */}
@@ -243,7 +247,7 @@ export function MeetingRoomDashboard() {
             {/* BUTTON */}
             <div className="flex justify-end">
               <button
-                onClick={() => setOpenAddPopup(true)}
+                onClick={() => navigate("/Check_RoomMeeting")}
                 className="bg-emerald-500 text-white px-6 py-2.5 rounded-xl shadow hover:scale-105 hover:bg-emerald-600 transition"
               >
                 + จองห้อง
@@ -282,8 +286,9 @@ export function MeetingRoomDashboard() {
                   className="h-40 w-full object-cover cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setActiveRoom(room);
-                    setOpenImagePopup(true);
+                    navigate("/Check_RoomMeeting", {
+                      state: { room }
+                    });
                   }}
                 />
 
@@ -413,8 +418,9 @@ export function MeetingRoomDashboard() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedRoomForBooking(room);
-                      setOpenAddPopup(true);
+                      navigate("/Check_RoomMeeting", {
+                        state: { room }
+                      });
                     }}
                     className="mt-4 w-full border border-gray-300 py-2 rounded-xl hover:bg-gray-900 hover:text-white transition"
                   >
@@ -427,17 +433,6 @@ export function MeetingRoomDashboard() {
         })}
 
       </div >
-
-      {/* POPUP */}
-      < CheckMeetingRoom
-        open={openAddPopup}
-        onClose={() => {
-          setOpenAddPopup(false);
-          setSelectedRoomForBooking(null);
-        }}
-        onDataLoaded={setRoomData}
-        defaultRoom={selectedRoomForBooking}
-      />
 
       {openImagePopup && activeRoom && (
         <div

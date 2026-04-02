@@ -1,10 +1,17 @@
 import { useState, useRef, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { AddBooking } from "./addFormBooking";
 import { MonthlySchedule } from "./monthlySchedule";
 import { EditBooking } from "./editFormBooking";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
 
-export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded }) {
+export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
+
+  const navigate = useNavigate();
+
+  const location = useLocation();
+  const defaultRoom = location.state?.room;
 
   const [roomData, setRoomData] = useState({ stats: [] });
   const [allRooms, setAllRooms] = useState([]);
@@ -268,19 +275,29 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded }) {
     });
   }, [currentDate, roomData]);
 
-  if (!open) return null;
-
   // UI
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="w-full min-h-screen bg-gray-100">
 
-      <div className="bg-white w-full h-full rounded-xl shadow-lg flex flex-col overflow-hidden">
+      <div className="bg-white rounded-xxl shadow-lg flex flex-col overflow-hidden">
 
         {/* HEADER */}
-        <div className="bg-blue-600 text-white px-6 py-4 flex justify-between">
-          <h2>ระบบจองห้องประชุม</h2>
-          <button onClick={onClose} className="bg-white text-blue-600 px-3 py-1 rounded">
-            ปิด
+        <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-4 flex items-center justify-between shadow-md">
+
+          {/* LEFT - TITLE */}
+          <div className="flex items-center gap-3">
+            <div className="w-1.5 h-6 bg-white/80 rounded-full"></div>
+            <h2 className="text-md sm:text-2xl font-semibold tracking-wide">
+              ระบบจองห้องประชุม
+            </h2>
+          </div>
+
+          {/* RIGHT - BUTTON */}
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-red-500 text-white px-6 py-2.5 rounded-xl shadow hover:scale-105 hover:bg-red-600 transition"
+          >
+            ย้อนกลับ
           </button>
         </div>
 
