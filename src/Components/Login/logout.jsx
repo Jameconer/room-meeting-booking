@@ -13,11 +13,12 @@ export function Logout() {
     const username = email?.split?.("@")?.[0] || "";
 
 
-    // ✅ ดึงข้อมูลผู้ใช้จาก localStorage
+    // ✅ ดึงข้อมูลผู้ใช้จาก API และเก็บใน localStorage
     useEffect(() => {
         api.post(import.meta.env.VITE_API_POST_Me).then((res) => {
             setEmail(res.data.response.email);
-
+            localStorage.setItem("user_id", res.data.response.user_id);
+            localStorage.setItem("email", res.data.response.email);
         });
 
     }, []);

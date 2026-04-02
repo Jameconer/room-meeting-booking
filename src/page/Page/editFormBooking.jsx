@@ -1,10 +1,19 @@
 import { useState, useEffect } from "react";
 import Confirm from "../../Components/Laout_component/confirmModal"
 import toast from 'react-hot-toast';
+import api from "../../Router/axiosToken";
 
 export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapping }) {
   const [showConfirm, setShowConfirm] = useState(false);
-  const [createdBy, setCreatedBy] = useState("");
+  const [user_id, setuser_id] = useState("");
+
+  useEffect(() => {
+    api.post(import.meta.env.VITE_API_POST_Me).then((res) => {
+      setuser_id(res.data.response.user_id);
+      console.log(res.data.response);
+    });
+
+  }, []);
 
   const [form, setForm] = useState({
     id: "",
@@ -26,20 +35,15 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
         room_id: bookingData.room_id || "",
         startDateTime: bookingData.startDateTime || "",
         endDateTime: bookingData.endDateTime || "",
-        title: bookingData.title || "",
+        title: bookingData.meeting_title || "",
         job: bookingData.job || "",
-        description: bookingData.description || "",
-        attendee: bookingData.attendee || ""
+        description: bookingData.meeting_description || "",
+        attendee: bookingData.attendee_count || ""
       });
     }
   }, [bookingData]);
 
-  useEffect(() => {
-    const email = localStorage.getItem("email");
-    if (email) {
-      setCreatedBy(email);
-    }
-  }, []);
+  console.log("bookingData:", bookingData);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,6 +54,7 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
   };
 
   const handleEditBooking = async () => {
+
     const start = new Date(form.startDateTime);
     const end = new Date(form.endDateTime);
 
@@ -61,8 +66,8 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
     const isConflict = isOverlapping(
       form.startDateTime,
       form.endDateTime,
-      bookingData.bookings || [], 
-      form.id 
+      bookingData.bookings || [],
+      form.id
     );
 
     if (isConflict) {
@@ -82,7 +87,7 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
       meeting_description: form.description,
       job: form.job,
       attendee_count: Number(form.attendee) || 0,
-      updated_by: createdBy,
+      updated_by: user_id,
       updated_at: new Date().toISOString().slice(0, 19)
     };
 
@@ -122,22 +127,14 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
     }
   };
 
+  console.log(user_id);
+
   const deleteBooking = async () => {
     try {
-      const res = await fetch("http://192.168.16.203:8090/api/booking/delete_booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: form.id })
+      const res = await api.post("http://192.168.16.203:8090/api/booking/delete_booking", {
+        id: form.id, user_id: user_id
       });
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Server response error:", text);
-        toast.error(`ลบไม่สำเร็จ: ${res.status}`);
-        return;
-      }
-
-      await res.json();
       toast.success("ลบรายการจองสำเร็จ");
       onDelete(form);
       onClose();

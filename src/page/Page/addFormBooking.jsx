@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import Confirm from "../../Components/Laout_component/confirmModal"
 import toast from 'react-hot-toast';
+import api from "../../Router/axiosToken";
 
 export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
 
-  const [createdBy, setCreatedBy] = useState("");
+  const [user_id, setuser_id] = useState("");
 
   const [form, setForm] = useState({
     roomName: roomData.room,
@@ -21,10 +22,11 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
   });
 
   useEffect(() => {
-    const email = localStorage.getItem("email");
-    if (email) {
-      setCreatedBy(email);
-    }
+    api.post(import.meta.env.VITE_API_POST_Me).then((res) => {
+      setuser_id(res.data.response.user_id);
+      console.log(res.data.response);
+    });
+
   }, []);
 
   const handleChange = (e) => {
@@ -53,7 +55,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
       toast.error("ช่วงเวลาที่สามารถจองได้คือ 08:00 - 17:00");
       return;
     }
-    
+
     const isConflict = isOverlapping(
       `${form.date}T${form.startTime}`,
       `${form.date}T${form.endTime}`,
@@ -73,7 +75,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
       meeting_description: form.description,
       job: form.job,
       attendee_count: Number(form.attendee) || 0,
-      created_by: createdBy
+      created_by: user_id
     };
 
     try {
@@ -85,6 +87,8 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
           body: JSON.stringify(payload)
         }
       );
+
+      console.log("Payload sent to server:", payload);
 
       if (!res.ok) {
         const text = await res.text();

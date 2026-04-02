@@ -4,7 +4,7 @@ import { MonthlySchedule } from "./monthlySchedule";
 import { EditBooking } from "./editFormBooking";
 import dayjs from "dayjs";
 
-export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
+export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded }) {
 
   const [roomData, setRoomData] = useState({ stats: [] });
   const [allRooms, setAllRooms] = useState([]);
@@ -18,7 +18,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
     year: today.getFullYear(),
     month: today.getMonth()
   });
-      
+
   useEffect(() => {
 
     const monthStr = `${currentDate.year}-${String(currentDate.month + 1).padStart(2, "0")}`;
@@ -42,7 +42,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
 
         const roomNames = dedupedRooms.map(r => r.room);
         setAllRooms([...new Set(roomNames)]);
-        
+
         const formatted = {
           stats: dedupedRooms.map((r) => ({
             room: r.room,
@@ -56,6 +56,7 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
               startDateTime: b.start_at,
               endDateTime: b.end_at,
               meeting_title: b.meeting_title || "",
+              job: b.job || "",
               meeting_description: b.meeting_description || "",
               attendee_count: b.attendee_count ?? 0
             }))
@@ -150,7 +151,17 @@ export function CheckMeetingRoom({ open, onClose, defaultRoom, onDataLoaded}) {
         return {
           ...room,
           bookings: room.bookings.map(b =>
-            b.id === updated.id ? { ...b, ...updated } : b
+            b.id === updated.id
+              ? {
+                ...b,
+                startDateTime: updated.startDateTime,
+                endDateTime: updated.endDateTime,
+                meeting_title: updated.title,
+                job: updated.job,
+                meeting_description: updated.description,
+                attendee_count: updated.attendee
+              }
+              : b
           )
         };
       })

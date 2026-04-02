@@ -60,11 +60,11 @@ export default function Login() {
                 password: password,
 
             },
+
+
                 {
                     skipAuth: true // 👈 เพิ่ม
                 });
-
-
 
             // ถ้า auth ผ่าน
             Swal.close();
@@ -99,7 +99,11 @@ export default function Login() {
                 didClose: () => {
                     setAccessToken(res.data.token);
                     localStorage.setItem("token", res.data.token);
-                    localStorage.setItem("email", email);
+                    // ดึงข้อมูลผู้ใช้
+                    api.post(import.meta.env.VITE_API_POST_Me).then((meRes) => {
+                        localStorage.setItem("user_id", meRes.data.response.user_id);
+                        localStorage.setItem("email", meRes.data.response.email);
+                    }).catch((err) => console.warn("Failed to fetch user info:", err));
                     // console.log(res.data.token);
                     navigate(`/List_RoomMeeting`);
 
