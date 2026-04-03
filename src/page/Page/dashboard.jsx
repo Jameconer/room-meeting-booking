@@ -1,7 +1,6 @@
 import { useState, useEffect, } from "react";
 import dayjs from "dayjs";
 import { Navbar } from "../../Components/Laout_component/navbar";
-import { CheckMeetingRoom } from "./checkMeetingRoom";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -14,6 +13,7 @@ export function MeetingRoomDashboard() {
   // -------- SELECT TIME --------
   const [selectedStart, setSelectedStart] = useState(dayjs());
   const [selectedEnd, setSelectedEnd] = useState(dayjs().add(1, "hour"));
+  const [timeFilter, setTimeFilter] = useState("all");
 
   const [openImagePopup, setOpenImagePopup] = useState(false);
   const [activeRoom, setActiveRoom] = useState(null);
@@ -25,16 +25,46 @@ export function MeetingRoomDashboard() {
 
   const [roomImageCache, setRoomImageCache] = useState({});
 
+  const isRoomAvailable = (room) => {
+    let start = selectedStart;
+    let end = selectedEnd;
+
+    if (timeFilter === "morning") {
+      start = selectedStart.hour(8).minute(0);
+      end = selectedStart.hour(12).minute(0);
+    }
+
+    if (timeFilter === "afternoon") {
+      start = selectedStart.hour(13).minute(0);
+      end = selectedStart.hour(17).minute(0);
+    }
+
+    return !room.bookings.some((b) => {
+      return (
+        start.isBefore(b.end_at) &&
+        end.isAfter(b.start_at)
+      );
+    });
+  };
+
   const filteredRooms = Array.from(
-    new Map(
-      roomData.map(r => [r.id, r])
-    ).values()
-  ).filter(room => {
-    if (activeTab === "all") return true;
-    if (activeTab === "meeting") return room.name.includes("ประชุม");
-    if (activeTab === "training") return room.name.includes("อบรม");
-    return false;
-  });
+    new Map(roomData.map(r => [r.id, r])).values()
+  )
+    .filter(room => {
+
+      // -------- FILTER TYPE --------
+      if (activeTab === "meeting" && !room.name.includes("ประชุม")) return false;
+      if (activeTab === "training" && !room.name.includes("อบรม")) return false;
+
+      // -------- FILTER TIME --------
+      if (timeFilter === "morning" || timeFilter === "afternoon") {
+        if (!isRoomAvailable(room)) return false;
+      }
+      return true;
+
+    });
+
+  const availableRooms = filteredRooms.filter(r => isRoomAvailable(r)).length;
 
   useEffect(() => {
     if (!activeRoom) return;
@@ -159,16 +189,6 @@ export function MeetingRoomDashboard() {
     setLoading(false);
   }, [roomData]);
 
-  // -------- CHECK AVAILABLE --------
-  const isRoomAvailable = (room) => {
-    return !room.bookings.some((b) => {
-      return (
-        selectedStart.isBefore(b.end_at) &&
-        selectedEnd.isAfter(b.start_at)
-      );
-    });
-  };
-
   // -------- GET STATUS --------
   const getRoomStatus = (room) => {
     const now = dayjs();
@@ -193,8 +213,6 @@ export function MeetingRoomDashboard() {
     };
   };
 
-  const availableRooms = roomData.filter(r => isRoomAvailable(r)).length;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
       <Navbar />
@@ -203,15 +221,13 @@ export function MeetingRoomDashboard() {
       <div className="pt-11 px-10 flex justify-between items-center">
       </div>
 
-      {/* TIME SELECT */}
       <div className="px-4 sm:px-10 mt-6 sm:mt-16">
         <div className="bg-white p-5 sm:p-6 rounded-2xl shadow">
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end">
+          <div className="flex flex-wrap items-center gap-4">
 
             {/* TIME SECTION */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
+            <div className="flex gap-4 items-end pr-4 border-gray-300">
               <div className="flex flex-col">
                 <label className="text-xs text-gray-500 mb-1">เริ่ม</label>
                 <input
@@ -231,16 +247,13 @@ export function MeetingRoomDashboard() {
                   className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-400"
                 />
               </div>
-
             </div>
 
-            {/* STATUS + FILTER */}
-            <div className="flex items-center gap-6 flex-wrap">
-
-              {/* FILTER */}
-              <div className="flex items-center gap-3">
+            {/* FILTER */}
+            <div className="flex items-end gap-6 px-4 border-gray-300 lg:border-r">
+              {/* ROOM TYPE */}
+              <div className="flex flex-col gap-1">
                 <p className="text-xs text-gray-500 whitespace-nowrap">ประเภทห้อง</p>
-
                 <div className="flex bg-gray-100 p-1 rounded-xl">
                   {["all", "meeting", "training"].map((type) => (
                     <button
@@ -262,23 +275,41 @@ export function MeetingRoomDashboard() {
                 </div>
               </div>
 
-              {/* DIVIDER */}
-              <div className="h-6 border-l opacity-30" />
-
-              {/* STATUS */}
-              <div className="flex items-center gap-2">
-                <p className="text-[18px] text-gray-500 whitespace-nowrap">
-                  ห้องพร้อมใช้งาน
-                </p>
-                <p className="text-xl font-semibold text-emerald-600">
-                  {availableRooms}
-                </p>
-                <span className="text-[18px] text-gray-500">ห้อง</span>
+              {/* TIME FILTER */}
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-gray-500 whitespace-nowrap">ช่วงเวลา</p>
+                <div className="flex bg-gray-100 p-1 rounded-xl">
+                  {["all", "morning", "afternoon"].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setTimeFilter(type)}
+                      className={`px-4 py-1.5 rounded-lg text-sm transition whitespace-nowrap
+            ${timeFilter === type
+                          ? "bg-white shadow text-blue-600 font-medium"
+                          : "text-gray-600 hover:text-black"
+                        }`}
+                    >
+                      {type === "all"
+                        ? "ทั้งหมด"
+                        : type === "morning"
+                          ? "เช้า"
+                          : "บ่าย"}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* BUTTON */}
-            <div className="flex justify-end">
+            {/* STATUS + BUTTON */}
+            <div className="flex items-center justify-between flex-1 px-4">
+              {/* STATUS */}
+              <div className="flex items-center gap-2">
+                <p className="text-[18px] text-gray-500 whitespace-nowrap">ห้องพร้อมใช้งาน</p>
+                <p className="text-xl font-semibold text-emerald-600">{availableRooms}</p>
+                <span className="text-[18px] text-gray-500">ห้อง</span>
+              </div>
+
+              {/* BUTTON */}
               <button
                 onClick={() => navigate("/Check_RoomMeeting")}
                 className="bg-emerald-500 text-white px-6 py-2.5 rounded-xl shadow hover:scale-105 hover:bg-emerald-600 transition"
@@ -286,6 +317,7 @@ export function MeetingRoomDashboard() {
                 + จองห้อง
               </button>
             </div>
+
           </div>
         </div>
       </div>
