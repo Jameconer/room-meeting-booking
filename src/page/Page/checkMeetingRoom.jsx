@@ -16,6 +16,9 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
   const [roomData, setRoomData] = useState({ stats: [] });
   const [allRooms, setAllRooms] = useState([]);
 
+  const [showStart, setShowStart] = useState(false);
+  const [showEnd, setShowEnd] = useState(false);
+
   const rowRefs = useRef({});
 
   const today = new Date();
@@ -26,7 +29,7 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
     month: today.getMonth()
   });
 
-   useEffect(() => {
+  useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
@@ -69,7 +72,8 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
               meeting_title: b.meeting_title || "",
               job: b.job || "",
               meeting_description: b.meeting_description || "",
-              attendee_count: b.attendee_count ?? 0
+              attendee_count: b.attendee_count ?? 0,
+              create_by: b.create_by || ""
             }))
           }))
         };
@@ -170,7 +174,7 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
                 meeting_title: updated.title,
                 job: updated.job,
                 meeting_description: updated.description,
-                attendee_count: updated.attendee
+                attendee_count: updated.attendee,
               }
               : b
           )
@@ -279,6 +283,31 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
     });
   }, [currentDate, roomData]);
 
+  const generateTimes = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        times.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+      }
+    }
+    return times;
+  };
+
+  const times = generateTimes();
+
+  const formatTimeInput = (val) => {
+    const numbers = val.replace(/\D/g, "").slice(0, 4);
+    if (numbers.length <= 2) return numbers;
+    return `${numbers.slice(0, 2)}:${numbers.slice(2)}`;
+  };
+
+  const isValidTime = (val) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
+
+  const combineDateTime = (date, time) => {
+    if (!date || !time || !isValidTime(time)) return "";
+    return `${date}T${time}`;
+  };
+
   // UI
   return (
     <div className="w-full min-h-screen bg-gray-100">
@@ -332,6 +361,7 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
                 ...booking,
                 room_id: roomInfo?.room_id,
                 capacity: roomInfo?.capacity,
+                create_by: roomInfo?.create_by,
                 bookings: roomInfo?.bookings || []
               });
             }}
@@ -346,6 +376,14 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
             onClose={() => setSelectedRoom(null)}
             onSave={handleAddBooking}
             isOverlapping={isOverlapping}
+            showStart={showStart}
+            setShowStart={setShowStart}
+            showEnd={showEnd}
+            setShowEnd={setShowEnd}
+            times={times}
+            formatTimeInput={formatTimeInput}
+            combineDateTime={combineDateTime}
+            isValidTime={isValidTime}
           />
         )}
 
@@ -356,6 +394,13 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
             onSave={handleEditBooking}
             onDelete={handleDeleteBooking}
             isOverlapping={isOverlapping}
+            showStart={showStart}
+            setShowStart={setShowStart}
+            showEnd={showEnd}
+            setShowEnd={setShowEnd}
+            times={times}
+            formatTimeInput={formatTimeInput}
+            combineDateTime={combineDateTime}
           />
         )}
 

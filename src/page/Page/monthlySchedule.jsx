@@ -13,7 +13,7 @@ export function MonthlySchedule({
   onCellClick,
   onEditBooking,
   rowRefs,
-  useState 
+  useState
 }) {
 
   const monthLabel = new Date(
@@ -76,13 +76,13 @@ export function MonthlySchedule({
   const now = new Date();
 
   const isCurrentMonth =
-    currentDate.month === now.getMonth() &&
-    currentDate.year === now.getFullYear();
+    currentDate.year === now.getFullYear() &&
+    (currentDate.month === now.getMonth() || currentDate.month === now.getMonth() + 1);
 
   const isFutureMonth =
     currentDate.year > now.getFullYear() ||
     (currentDate.year === now.getFullYear() &&
-      currentDate.month > now.getMonth());
+      currentDate.month > now.getMonth() + 1);
 
   const isPastMonth =
     currentDate.year < now.getFullYear() ||

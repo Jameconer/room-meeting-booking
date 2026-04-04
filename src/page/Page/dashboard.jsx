@@ -25,6 +25,12 @@ export function MeetingRoomDashboard() {
 
   const [roomImageCache, setRoomImageCache] = useState({});
 
+  const [startInput, setStartInput] = useState(selectedStart.format("HH:mm"));
+  const [endInput, setEndInput] = useState(selectedEnd.format("HH:mm"));
+
+  const [showStart, setShowStart] = useState(false);
+  const [showEnd, setShowEnd] = useState(false);
+
   const isRoomAvailable = (room) => {
     let start = selectedStart;
     let end = selectedEnd;
@@ -213,6 +219,27 @@ export function MeetingRoomDashboard() {
     };
   };
 
+  const generateTimes = () => {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        times.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+      }
+    }
+    return times;
+  };
+
+  const times = generateTimes();
+
+  const formatTimeInput = (val) => {
+    const numbers = val.replace(/\D/g, "").slice(0, 4);
+
+    if (numbers.length <= 2) return numbers;
+    return `${numbers.slice(0, 2)}:${numbers.slice(2)}`;
+  };
+
+  const isValidTime = (val) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
       <Navbar />
@@ -227,26 +254,119 @@ export function MeetingRoomDashboard() {
           <div className="flex flex-wrap items-center gap-4">
 
             {/* TIME SECTION */}
-            <div className="flex gap-4 items-end pr-4 border-gray-300">
+            <div className="flex flex-wrap items-end gap-4 p-4 bg-white rounded-2xl shadow border">
+
+              {/* DATE */}
               <div className="flex flex-col">
-                <label className="text-xs text-gray-500 mb-1">เริ่ม</label>
+                <label className="text-xs text-gray-500 mb-1">วันที่</label>
                 <input
-                  type="datetime-local"
-                  value={selectedStart.format("YYYY-MM-DDTHH:mm")}
-                  onChange={(e) => setSelectedStart(dayjs(e.target.value))}
-                  className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-400"
+                  type="date"
+                  value={selectedStart.format("YYYY-MM-DD")}
+                  onChange={(e) => {
+                    const newDate = dayjs(e.target.value);
+                    setSelectedStart(selectedStart
+                      .year(newDate.year())
+                      .month(newDate.month())
+                      .date(newDate.date())
+                    );
+                    setSelectedEnd(selectedEnd
+                      .year(newDate.year())
+                      .month(newDate.month())
+                      .date(newDate.date())
+                    );
+                  }}
+                  className="border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-emerald-400"
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label className="text-xs text-gray-500 mb-1">สิ้นสุด</label>
+              {/* START */}
+              <div className="relative w-40">
+                <label className="text-xs text-gray-500 mb-1 block">เริ่ม</label>
+
                 <input
-                  type="datetime-local"
-                  value={selectedEnd.format("YYYY-MM-DDTHH:mm")}
-                  onChange={(e) => setSelectedEnd(dayjs(e.target.value))}
-                  className="border rounded-lg px-3 py-2 focus:ring-2 focus:ring-emerald-400"
+                  value={startInput}
+                  onChange={(e) => setStartInput(formatTimeInput(e.target.value))}
+                  onFocus={() => setShowStart(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowStart(false), 150);
+
+                    if (isValidTime(startInput)) {
+                      const [h, m] = startInput.split(":");
+                      setSelectedStart(selectedStart.hour(h).minute(m));
+                    }
+                  }}
+                  placeholder="ชั่วโมง:นาที"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 
+                  focus:ring-2 focus:ring-emerald-400 outline-none text-center"
                 />
+
+                {showStart && (
+                  <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto bg-white border rounded-xl shadow">
+                    {times
+                      .filter(t => t.includes(startInput))
+                      .map(t => (
+                        <div
+                          key={t}
+                          onClick={() => {
+                            setStartInput(t);
+                            const [h, m] = t.split(":");
+                            setSelectedStart(selectedStart.hour(h).minute(m));
+                            setShowStart(false);
+                          }}
+                          className="px-3 py-2 hover:bg-emerald-500 hover:text-white cursor-pointer"
+                        >
+                          {t}
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
+
+              <div className="pb-2 text-gray-400">→</div>
+
+              {/* END */}
+              <div className="relative w-40">
+                <label className="text-xs text-gray-500 mb-1 block">สิ้นสุด</label>
+
+                <input
+                  value={endInput}
+                  onChange={(e) => setEndInput(formatTimeInput(e.target.value))}
+                  onFocus={() => setShowEnd(true)}
+                  onBlur={() => {
+                    setTimeout(() => setShowEnd(false), 150);
+
+                    if (isValidTime(endInput)) {
+                      const [h, m] = endInput.split(":");
+                      setSelectedEnd(selectedEnd.hour(h).minute(m));
+                    }
+                  }}
+                  placeholder="ชั่วโมง:นาที"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 
+                  focus:ring-2 focus:ring-emerald-400 outline-none text-center"
+                />
+
+                {showEnd && (
+                  <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto bg-white border rounded-xl shadow">
+                    {times
+                      .filter(t => t.includes(endInput))
+                      .map(t => (
+                        <div
+                          key={t}
+                          onClick={() => {
+                            setEndInput(t);
+                            const [h, m] = t.split(":");
+                            setSelectedEnd(selectedEnd.hour(h).minute(m));
+                            setShowEnd(false);
+                          }}
+                          className="px-3 py-2 hover:bg-emerald-500 hover:text-white cursor-pointer"
+                        >
+                          {t}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
             </div>
 
             {/* FILTER */}

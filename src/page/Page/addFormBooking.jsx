@@ -3,8 +3,7 @@ import Confirm from "../../Components/Laout_component/confirmModal"
 import toast from 'react-hot-toast';
 import api from "../../Router/axiosToken";
 
-export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
-
+export function AddBooking({ roomData, onClose, onSave, isOverlapping, times, formatTimeInput, showStart, setShowStart, showEnd, setShowEnd, isValidTime }) {
   const [user_id, setuser_id] = useState("");
 
   const [form, setForm] = useState({
@@ -124,6 +123,22 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
     }
   };
 
+  const [totalHours, setTotalHours] = useState(0);
+
+  const calculateTotalHours = (start, end) => {
+    if (!start || !end) return 0;
+    const [sH, sM] = start.split(":").map(Number);
+    const [eH, eM] = end.split(":").map(Number);
+    const startDate = new Date(0, 0, 0, sH, sM);
+    const endDate = new Date(0, 0, 0, eH, eM);
+    let diff = (endDate - startDate) / (1000 * 60 * 60);
+    return diff > 0 ? diff : 0;
+  };
+
+  useEffect(() => {
+    setTotalHours(calculateTotalHours(form.startTime, form.endTime));
+  }, [form.startTime, form.endTime]);
+
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white w-[480px] h-[800px] p-6 rounded-2xl shadow-md border border-gray-100 overflow-auto relative">
@@ -181,33 +196,144 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
             />
           </div>
 
-          {/* เวลา */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">เวลาเริ่ม</label>
-              <input
-                type="time"
-                name="startTime"
-                value={form.startTime}
-                onChange={handleChange}
-                className="w-full border border-gray-200 p-2.5 rounded-lg 
-            focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                required
-              />
+          {/* TIME SHORTCUT BUTTONS */}
+          <div className="flex flex-col items-center gap-2 mb-3 text-center">
+            {/* ปุ่ม shortcut */}
+            <div className="flex gap-2 justify-center w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(prev => ({ ...prev, startTime: "08:00", endTime: "12:00" }));
+                  setTotalHours(4);
+                }}
+                className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+              >
+                รอบเช้า
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(prev => ({ ...prev, startTime: "13:00", endTime: "17:00" }));
+                  setTotalHours(4);
+                }}
+                className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+              >
+                รอบบ่าย
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(prev => ({ ...prev, startTime: "08:00", endTime: "17:00" }));
+                  setTotalHours(9);
+                }}
+                className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+              >
+                ทั้งวัน
+              </button>
             </div>
 
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">เวลาสิ้นสุด</label>
+            {/* เวลารวม */}
+            <div className="text-sm text-gray-500 mt-1">
+              เวลารวม: <span className="font-medium">{totalHours} ชั่วโมง</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+
+            {/* START */}
+            <div className="relative">
+              <label className="block text-sm text-gray-600 mb-1">
+                เวลาเริ่ม <span className="text-emerald-600 text-xs">(กรุณากรอกเวลา)</span>
+              </label>
+
               <input
-                type="time"
-                name="endTime"
-                value={form.endTime}
-                onChange={handleChange}
-                className="w-full border border-gray-200 p-2.5 rounded-lg 
-            focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                value={form.startTime}
+                onChange={(e) => {
+                  const formatted = formatTimeInput(e.target.value);
+                  setForm(prev => ({ ...prev, startTime: formatted }));
+                }}
+                onFocus={() => setShowStart(true)}
+                onBlur={() => {
+                  setTimeout(() => setShowStart(false), 150);
+
+                  if (!isValidTime(form.startTime)) {
+                    setForm(prev => ({ ...prev, startTime: "" }));
+                  }
+                }}
+                placeholder="ชั่วโมง:นาที"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 
+      focus:ring-2 focus:ring-emerald-400 outline-none text-center"
                 required
               />
+
+              {showStart && (
+                <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto bg-white border rounded-xl shadow">
+                  {times
+                    .filter(t => t.includes(form.startTime))
+                    .map(t => (
+                      <div
+                        key={t}
+                        onClick={() => {
+                          setForm(prev => ({ ...prev, startTime: t }));
+                          setShowStart(false);
+                        }}
+                        className="px-3 py-2 hover:bg-emerald-500 hover:text-white cursor-pointer"
+                      >
+                        {t}
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
+
+            {/* END */}
+            <div className="relative">
+              <label className="block text-sm text-gray-600 mb-1">
+                เวลาสิ้นสุด <span className="text-emerald-600 text-xs">(กรุณากรอกเวลา)</span>
+              </label>
+
+              <input
+                value={form.endTime}
+                onChange={(e) => {
+                  const formatted = formatTimeInput(e.target.value);
+                  setForm(prev => ({ ...prev, endTime: formatted }));
+                }}
+                onFocus={() => setShowEnd(true)}
+                onBlur={() => {
+                  setTimeout(() => setShowEnd(false), 150);
+
+                  if (!isValidTime(form.endTime)) {
+                    setForm(prev => ({ ...prev, endTime: "" }));
+                  }
+                }}
+                placeholder="ชั่วโมง:นาที"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 
+      focus:ring-2 focus:ring-emerald-400 outline-none text-center"
+                required
+              />
+
+              {showEnd && (
+                <div className="absolute z-10 mt-1 w-full max-h-40 overflow-y-auto bg-white border rounded-xl shadow">
+                  {times
+                    .filter(t => t.includes(form.endTime))
+                    .map(t => (
+                      <div
+                        key={t}
+                        onClick={() => {
+                          setForm(prev => ({ ...prev, endTime: t }));
+                          setShowEnd(false);
+                        }}
+                        className="px-3 py-2 hover:bg-emerald-500 hover:text-white cursor-pointer"
+                      >
+                        {t}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
           </div>
 
           {/* ชื่อการอบรม */}
@@ -283,7 +409,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping }) {
               type="submit"
               className="px-4 py-2 rounded-lg bg-emerald-600 text-white 
              hover:bg-emerald-700 transition shadow-sm"
-             >
+            >
               {form.isEditing ? "บันทึกการแก้ไข" : "บันทึก"}
             </button>
           </div>
