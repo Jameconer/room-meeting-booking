@@ -25,8 +25,8 @@ export function MeetingRoomDashboard() {
 
   const [roomImageCache, setRoomImageCache] = useState({});
 
-  const [startInput, setStartInput] = useState(selectedStart.format("HH:mm"));
-  const [endInput, setEndInput] = useState(selectedEnd.format("HH:mm"));
+  const [startInput, setStartInput] = useState("");
+  const [endInput, setEndInput] = useState("");
 
   const [showStart, setShowStart] = useState(false);
   const [showEnd, setShowEnd] = useState(false);
