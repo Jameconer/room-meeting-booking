@@ -32,6 +32,8 @@ export function MeetingRoomDashboard() {
   const [showEnd, setShowEnd] = useState(false);
 
   const isRoomAvailable = (room) => {
+    if (!selectedStart || !selectedEnd) return true;
+
     let start = selectedStart;
     let end = selectedEnd;
 
@@ -186,10 +188,13 @@ export function MeetingRoomDashboard() {
     .slice(0, 3);
 
   useEffect(() => {
+    if (!selectedStart || !selectedEnd) return;
+
     if (selectedStart.isAfter(selectedEnd)) {
       setSelectedEnd(selectedStart.add(1, "hour"));
     }
   }, [selectedStart]);
+
 
   useEffect(() => {
     setLoading(false);
@@ -199,9 +204,11 @@ export function MeetingRoomDashboard() {
   const getRoomStatus = (room) => {
     const now = dayjs();
 
-    const todayBookings = room.bookings.filter(b =>
-      b.start_at.isSame(selectedStart, "day")
-    );
+    const todayBookings = selectedStart
+      ? room.bookings.filter(b =>
+        b.start_at.isSame(selectedStart, "day")
+      )
+      : [];
 
     const current = todayBookings.find(b =>
       now.isAfter(b.start_at) && now.isBefore(b.end_at)
@@ -261,22 +268,33 @@ export function MeetingRoomDashboard() {
                 <label className="text-xs text-gray-500 mb-1">วันที่</label>
                 <input
                   type="date"
-                  value={selectedStart.format("YYYY-MM-DD")}
+                  value={selectedStart ? selectedStart.format("YYYY-MM-DD") : ""}
                   onChange={(e) => {
-                    const newDate = dayjs(e.target.value);
-                    setSelectedStart(selectedStart
-                      .year(newDate.year())
-                      .month(newDate.month())
-                      .date(newDate.date())
+                    const value = e.target.value;
+
+                    if (!value) {
+                      setSelectedStart(null);
+                      setSelectedEnd(null);
+                      return;
+                    }
+
+                    const newDate = dayjs(value);
+
+                    setSelectedStart(prev =>
+                      prev
+                        ? prev.year(newDate.year()).month(newDate.month()).date(newDate.date())
+                        : newDate
                     );
-                    setSelectedEnd(selectedEnd
-                      .year(newDate.year())
-                      .month(newDate.month())
-                      .date(newDate.date())
+
+                    setSelectedEnd(prev =>
+                      prev
+                        ? prev.year(newDate.year()).month(newDate.month()).date(newDate.date())
+                        : newDate.add(1, "hour")
                     );
                   }}
                   className="border border-gray-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-emerald-400"
                 />
+
               </div>
 
               {/* START */}
@@ -292,9 +310,14 @@ export function MeetingRoomDashboard() {
 
                     if (isValidTime(startInput)) {
                       const [h, m] = startInput.split(":");
-                      setSelectedStart(selectedStart.hour(h).minute(m));
+
+                      setSelectedStart(prev => {
+                        const base = prev || dayjs();
+                        return base.hour(h).minute(m);
+                      });
                     }
                   }}
+
                   placeholder="ชั่วโมง:นาที"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 
                   focus:ring-2 focus:ring-emerald-400 outline-none text-center"
@@ -310,7 +333,12 @@ export function MeetingRoomDashboard() {
                           onClick={() => {
                             setStartInput(t);
                             const [h, m] = t.split(":");
-                            setSelectedStart(selectedStart.hour(h).minute(m));
+
+                            setSelectedStart(prev => {
+                              const base = prev || dayjs();
+                              return base.hour(h).minute(m);
+                            });
+
                             setShowStart(false);
                           }}
                           className="px-3 py-2 hover:bg-emerald-500 hover:text-white cursor-pointer"
@@ -337,7 +365,11 @@ export function MeetingRoomDashboard() {
 
                     if (isValidTime(endInput)) {
                       const [h, m] = endInput.split(":");
-                      setSelectedEnd(selectedEnd.hour(h).minute(m));
+
+                      setSelectedEnd(prev => {
+                        const base = prev || dayjs();
+                        return base.hour(h).minute(m);
+                      });
                     }
                   }}
                   placeholder="ชั่วโมง:นาที"
@@ -355,7 +387,12 @@ export function MeetingRoomDashboard() {
                           onClick={() => {
                             setEndInput(t);
                             const [h, m] = t.split(":");
-                            setSelectedEnd(selectedEnd.hour(h).minute(m));
+
+                            setSelectedEnd(prev => {
+                              const base = prev || dayjs();
+                              return base.hour(h).minute(m);
+                            });
+
                             setShowEnd(false);
                           }}
                           className="px-3 py-2 hover:bg-emerald-500 hover:text-white cursor-pointer"

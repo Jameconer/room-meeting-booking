@@ -76,8 +76,9 @@ export function MonthlySchedule({
   const now = new Date();
 
   const isCurrentMonth =
-    currentDate.year === now.getFullYear() &&
-    (currentDate.month === now.getMonth() || currentDate.month === now.getMonth() + 1);
+    currentDate.year > now.getFullYear() ||
+    (currentDate.year === now.getFullYear() &&
+      currentDate.month >= now.getMonth());
 
   const isFutureMonth =
     currentDate.year > now.getFullYear() ||
@@ -325,7 +326,7 @@ export function MonthlySchedule({
                         }}
                         className={`relative border p-[2px] overflow-hidden 
                           ${theme.cell} 
-                          ${isCurrentMonth ? "cursor-pointer" : "cursor-default"}
+                          
                         `}
                         title={
                           isFutureMonth
@@ -342,11 +343,7 @@ export function MonthlySchedule({
 
                         {renderTimeBlocks(bookings, room, row.day)}
 
-                        {isFutureMonth && (
-                          <div className="absolute inset-0 bg-white/40 z-10 flex items-center justify-center text-[12px] text-gray-500 font-semibold">
-                            🔒 ยังไม่เปิดจอง
-                          </div>
-                        )}
+                       
                       </td>
 
                     );
