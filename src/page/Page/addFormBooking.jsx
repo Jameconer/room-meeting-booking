@@ -208,7 +208,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping, times, fo
                 }}
                 className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
               >
-                รอบเช้า
+                ครึ่งเช้า
               </button>
 
               <button
@@ -219,7 +219,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping, times, fo
                 }}
                 className="px-4 py-2 rounded-lg bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
               >
-                รอบบ่าย
+                ครึ่งบ่าย
               </button>
 
               <button
