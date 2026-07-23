@@ -75,6 +75,22 @@ export function MeetingRoomDashboard() {
   const availableRooms = filteredRooms.filter(r => isRoomAvailable(r)).length;
 
   useEffect(() => {
+          // ตั้ง title
+          document.title = "IXB Reserve Room";
+  
+          // ตั้ง favicon
+          const faviconUrl = `${import.meta.env.VITE_IMG_RoomMeetingLogo}`;
+          const link = document.createElement("link");
+          link.rel = "icon";
+          link.type = "image/png";
+          link.href = faviconUrl;
+  
+          const oldFavicon = document.querySelector("link[rel='icon']");
+          if (oldFavicon) document.head.removeChild(oldFavicon);
+          document.head.appendChild(link);
+      }, []); // รันใหม่ถ้า language เปลี่ยน
+
+  useEffect(() => {
     if (!activeRoom) return;
 
     const fetchImages = async () => {

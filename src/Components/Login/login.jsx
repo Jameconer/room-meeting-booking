@@ -18,10 +18,10 @@ export default function Login() {
     };
     useEffect(() => {
         // ตั้ง title
-        document.title = "IXB Reserve Room";
+        document.title = "IMSPRO R&D Login";
 
         // ตั้ง favicon
-        const faviconUrl = `${import.meta.env.VITE_IMG_RoomMeetingLogo}`;
+        const faviconUrl = `${import.meta.env.VITE_IMG_ImgSys}/R&D Logo.png`;
         const link = document.createElement("link");
         link.rel = "icon";
         link.type = "image/png";
