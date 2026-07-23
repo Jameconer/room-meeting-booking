@@ -30,6 +30,7 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
   });
 
   useEffect(() => {
+    document.title = "IXB Reserve Room";
     window.scrollTo(0, 0);
   }, []);
 
