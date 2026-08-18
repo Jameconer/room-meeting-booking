@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Confirm from "../../Components/Laout_component/confirmModal"
 import toast from 'react-hot-toast';
 import api from "../../Router/axiosToken";
+import { BOOKING_API } from "../../config/api";
 
 export function AddBooking({ roomData, onClose, onSave, isOverlapping, times, formatTimeInput, showStart, setShowStart, showEnd, setShowEnd, isValidTime }) {
   const [user_id, setuser_id] = useState("");
@@ -83,7 +84,7 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping, times, fo
 
     try {
       const res = await fetch(
-        "http://192.168.16.203:8090/api/booking/create_booking",
+        BOOKING_API.create,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -99,8 +100,6 @@ export function AddBooking({ roomData, onClose, onSave, isOverlapping, times, fo
       }
 
       const result = await res.json();
-      console.log("payload sent:", payload);
-      console.log("server response:", result);
 
       toast.success("บันทึกรายการจองสำเร็จ");
 

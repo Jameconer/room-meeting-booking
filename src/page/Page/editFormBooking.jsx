@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Confirm from "../../Components/Laout_component/confirmModal"
 import toast from 'react-hot-toast';
 import api from "../../Router/axiosToken";
+import { formatTimeInput } from "../../utils/time";
+import { BOOKING_API } from "../../config/api";
 
 export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapping, showStart, setShowStart, showEnd, setShowEnd, times, combineDateTime }) {
 
@@ -112,7 +114,7 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
 
     try {
       const res = await fetch(
-        "http://192.168.16.203:8090/api/booking/update_booking",
+        BOOKING_API.update,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -151,7 +153,7 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
     }
 
     try {
-      await api.post("http://192.168.16.203:8090/api/booking/delete_booking", {
+      await api.post(BOOKING_API.remove, {
         id: form.id,
         user_id: user_id
       });
@@ -225,11 +227,7 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
                     placeholder="ชั่วโมง:นาที"
                     value={form.startDateTime?.split("T")[1] || ""}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                      let formatted = val;
-                      if (val.length > 2) {
-                        formatted = `${val.slice(0, 2)}:${val.slice(2)}`;
-                      }
+                      const formatted = formatTimeInput(e.target.value);
                       const date = form.startDateTime?.split("T")[0] || "";
                       setForm(prev => ({
                         ...prev,
@@ -295,11 +293,7 @@ export function EditBooking({ bookingData, onClose, onSave, onDelete, isOverlapp
                     placeholder="ชั่วโมง:นาที"
                     value={form.endDateTime?.split("T")[1] || ""}
                     onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").slice(0, 4);
-                      let formatted = val;
-                      if (val.length > 2) {
-                        formatted = `${val.slice(0, 2)}:${val.slice(2)}`;
-                      }
+                      const formatted = formatTimeInput(e.target.value);
                       const date = form.endDateTime?.split("T")[0] || "";
                       setForm(prev => ({
                         ...prev,

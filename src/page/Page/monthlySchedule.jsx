@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 export function MonthlySchedule({
   data,
   currentDate,
@@ -12,8 +14,7 @@ export function MonthlySchedule({
   filteredRooms,
   onCellClick,
   onEditBooking,
-  rowRefs,
-  useState
+  rowRefs
 }) {
 
   const monthLabel = new Date(
@@ -70,6 +71,25 @@ export function MonthlySchedule({
   });
 
   const roomsToShow = roomFilter ? filteredRooms : displayRooms;
+
+  // fade ขอบซ้าย/ขวา: โชว์เฉพาะเมื่อยังเลื่อนแนวนอนต่อได้จริง
+  const [showLeftFade, setShowLeftFade] = useState(false);
+  const [showRightFade, setShowRightFade] = useState(false);
+
+  const updateEdgeFades = () => {
+    const el = tableRef?.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setShowLeftFade(el.scrollLeft > 1);
+    setShowRightFade(el.scrollLeft < maxScroll - 1);
+  };
+
+  useEffect(() => {
+    updateEdgeFades();
+    window.addEventListener("resize", updateEdgeFades);
+    return () => window.removeEventListener("resize", updateEdgeFades);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomsToShow.length, data]);
 
   const today = new Date();
 
@@ -252,7 +272,12 @@ export function MonthlySchedule({
       </div>
 
       {/* TABLE */}
-      <div ref={tableRef} className="flex-1 overflow-auto">
+      <div className="relative flex-1 min-h-0">
+        <div
+          ref={tableRef}
+          onScroll={updateEdgeFades}
+          className="h-full overflow-auto"
+        >
 
         <table className="w-full table-fixed border-collapse">
 
@@ -289,11 +314,7 @@ export function MonthlySchedule({
                   ref={(el) => (rowRefs.current[row.day] = el)}
                 >
 
-                  <td
-                    className={`border text-center font-semibold relative
-                      ${isToday}
-                    `}
-                  >
+                  <td className="border text-center font-semibold relative">
                     {row.day}
 
                     {isToday && (
@@ -388,9 +409,9 @@ export function MonthlySchedule({
                 </div>
               )}
 
-              {tooltip.data.people && (
-                <div className="text-gray-400 text-[11px]">
-                  👥 {tooltip.data.people} คน
+              {tooltip.data.create_by_email && (
+                <div className="text-gray-300">
+                  ผู้จอง : {tooltip.data.create_by_email.split("@")[0]}
                 </div>
               )}
 
@@ -399,6 +420,16 @@ export function MonthlySchedule({
 
             </div>
           </div>
+        )}
+
+        </div>
+
+        {/* fade ขอบซ้าย/ขวา: โผล่เฉพาะตอนที่ยังเลื่อนแนวนอนต่อได้ */}
+        {showLeftFade && (
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-white to-transparent z-30" />
+        )}
+        {showRightFade && (
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-white to-transparent z-30" />
         )}
 
       </div>

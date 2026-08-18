@@ -5,6 +5,8 @@ import { MonthlySchedule } from "./monthlySchedule";
 import { EditBooking } from "./editFormBooking";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
+import { generateTimes, formatTimeInput, isValidTime, combineDateTime } from "../../utils/time";
+import { BOOKING_API } from "../../config/api";
 
 export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
 
@@ -30,7 +32,8 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
   });
 
   useEffect(() => {
-    document.title = "IXB Reserve Room";
+    // ตั้ง title ของแท็บเบราว์เซอร์ (กันไม่ให้โชว์เป็น URL)
+    document.title = "ตรวจสอบห้องประชุม | IXB Reserve Room";
     window.scrollTo(0, 0);
   }, []);
 
@@ -38,7 +41,7 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
 
     const monthStr = `${currentDate.year}-${String(currentDate.month + 1).padStart(2, "0")}`;
 
-    fetch("http://192.168.16.203:8090/api/booking/get_meeting_rooms_booking", {
+    fetch(BOOKING_API.getRooms, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -74,7 +77,8 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
               job: b.job || "",
               meeting_description: b.meeting_description || "",
               attendee_count: b.attendee_count ?? 0,
-              create_by: b.create_by || ""
+              create_by: b.create_by || "",
+              create_by_email: b.create_by_email || ""
             }))
           }))
         };
@@ -284,30 +288,7 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
     });
   }, [currentDate, roomData]);
 
-  const generateTimes = () => {
-    const times = [];
-    for (let h = 0; h < 24; h++) {
-      for (let m = 0; m < 60; m += 15) {
-        times.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-      }
-    }
-    return times;
-  };
-
   const times = generateTimes();
-
-  const formatTimeInput = (val) => {
-    const numbers = val.replace(/\D/g, "").slice(0, 4);
-    if (numbers.length <= 2) return numbers;
-    return `${numbers.slice(0, 2)}:${numbers.slice(2)}`;
-  };
-
-  const isValidTime = (val) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
-
-  const combineDateTime = (date, time) => {
-    if (!date || !time || !isValidTime(time)) return "";
-    return `${date}T${time}`;
-  };
 
   // UI
   return (
@@ -351,8 +332,6 @@ export function CheckMeetingRoom({ onDataLoaded = () => { } }) {
             setRoomFilter={setRoomFilter}
             filteredRooms={filteredRooms}
             onCellClick={handleCellClick}
-            useState={useState}
-            useMemo={useMemo}
             rowRefs={rowRefs}
             onEditBooking={(booking) => {
               const roomInfo = roomData.stats.find(r => r.room === booking.room);

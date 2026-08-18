@@ -1,15 +1,16 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import { clearAccessToken } from "./token";
+import { API_BASE } from "../config/api";
 
 const api = axios.create({
-    baseURL: "http://192.168.16.203:8090/api",
+    baseURL: `${API_BASE}/api`,
     withCredentials: true
 });
 
 // 👉 axios แยก สำหรับ logout (ไม่ผ่าน interceptor)
 const logoutApi = axios.create({
-    baseURL: "http://192.168.16.203:8090/api",
+    baseURL: `${API_BASE}/api`,
     withCredentials: true
 });
 

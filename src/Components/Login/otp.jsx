@@ -55,7 +55,7 @@ export default function OtpPage() {
                 didOpen: () => Swal.showLoading(),
             });
 
-            const res = await axios.post(import.meta.env.VITE_API_POST_Register, {
+            await axios.post(import.meta.env.VITE_API_POST_Register, {
                 email: email,
             });
 
@@ -160,7 +160,7 @@ export default function OtpPage() {
                 }
             });
 
-            const res = await axios.post(import.meta.env.VITE_API_POST_Otp, {
+            await axios.post(import.meta.env.VITE_API_POST_Otp, {
                 email: email,
                 password: password,
                 otp: otpValue,

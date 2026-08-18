@@ -1,8 +1,10 @@
-import { useState, useEffect, } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dayjs from "dayjs";
 import { Navbar } from "../../Components/Laout_component/navbar";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { generateTimes, formatTimeInput, isValidTime } from "../../utils/time";
+import { BOOKING_API } from "../../config/api";
 
 export function MeetingRoomDashboard() {
 
@@ -96,7 +98,7 @@ export function MeetingRoomDashboard() {
     const fetchImages = async () => {
       try {
         const res = await fetch(
-          "http://192.168.16.203:8090/api/file/getfilebypath",
+          BOOKING_API.fileByPath,
           {
             method: "POST",
             headers: {
@@ -132,7 +134,7 @@ export function MeetingRoomDashboard() {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await fetch("http://192.168.16.203:8090/api/booking/get_meeting_rooms_booking", {
+        const res = await fetch(BOOKING_API.getRooms, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -159,10 +161,11 @@ export function MeetingRoomDashboard() {
         }));
 
         setRoomData(formatted);
-        setLoading(false);
 
       } catch (err) {
         console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -191,17 +194,19 @@ export function MeetingRoomDashboard() {
 
   useEffect(() => {
 
-    axios.post("http://192.168.16.203:8090/api/intranet/savevisits", {
+    axios.post(BOOKING_API.saveVisits, {
       "APP_ID": 19
     })
 
   }, []);
 
-  const allEquipment = ["TV", "Projector", "Speaker", "Zoom", "Whiteboard"];
-
-  const demoEquipment = allEquipment
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 3);
+  // สุ่มอุปกรณ์ตัวอย่างครั้งเดียวตอน mount (ไม่ให้สุ่มใหม่ทุก render)
+  const demoEquipment = useMemo(
+    () => ["TV", "Projector", "Speaker", "Zoom", "Whiteboard"]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 3),
+    []
+  );
 
   useEffect(() => {
     if (!selectedStart || !selectedEnd) return;
@@ -210,11 +215,6 @@ export function MeetingRoomDashboard() {
       setSelectedEnd(selectedStart.add(1, "hour"));
     }
   }, [selectedStart]);
-
-
-  useEffect(() => {
-    setLoading(false);
-  }, [roomData]);
 
   // -------- GET STATUS --------
   const getRoomStatus = (room) => {
@@ -242,26 +242,7 @@ export function MeetingRoomDashboard() {
     };
   };
 
-  const generateTimes = () => {
-    const times = [];
-    for (let h = 0; h < 24; h++) {
-      for (let m = 0; m < 60; m += 15) {
-        times.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
-      }
-    }
-    return times;
-  };
-
   const times = generateTimes();
-
-  const formatTimeInput = (val) => {
-    const numbers = val.replace(/\D/g, "").slice(0, 4);
-
-    if (numbers.length <= 2) return numbers;
-    return `${numbers.slice(0, 2)}:${numbers.slice(2)}`;
-  };
-
-  const isValidTime = (val) => /^([01]\d|2[0-3]):([0-5]\d)$/.test(val);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">

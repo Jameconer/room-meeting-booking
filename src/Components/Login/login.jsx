@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-// import { useFilter } from "../designobject/filterContext";
 import { setAccessToken } from "../../Router/token";
 import api from "../../Router/axiosToken";
 
@@ -104,7 +102,6 @@ export default function Login() {
                         localStorage.setItem("user_id", meRes.data.response.user_id);
                         localStorage.setItem("email", meRes.data.response.email);
                     }).catch((err) => console.warn("Failed to fetch user info:", err));
-                    // console.log(res.data.token);
                     navigate(`/List_RoomMeeting`);
 
 
@@ -213,50 +210,11 @@ export default function Login() {
     };
 
     const handleOpenFileSafely = () => {
-        // if (loading) {
-        //     Swal.fire({
-        //         icon: "info",
-        //         title: "กำลังโหลด...",
-        //         text: "กรุณารอสักครู่",
-        //     });
-        //     return;
-        // }
-
-        const fileIso = "login IMS Smartboard.pdf"
-        // console.log(fileIso);
-        const subarg = "Other"
-        // if (!images || images.length === 0) {
-        //     Swal.fire({
-        //         icon: "warning",
-        //         title: lang_keyword("Please wait"),
-        //         text: lang_keyword("Loading files, please try again in a moment."),
-        //     });
-        //     return;
-        // }
+        const fileIso = "login IMS Smartboard.pdf";
+        const subarg = "Other";
         const basePath = `${import.meta.env.VITE_IMG_Utility}/${subarg}`;
         const fullUrl = `${basePath}/${fileIso}`;
-        // console.log(fullUrl);
         window.open(fullUrl, '_blank');
-        // const folder1 = images.find(folder => folder.name === "UploadFile");
-        // const folder2 = folder1?.children?.find(sub => sub.name === "Utility");
-        // const folder3 = folder2?.children?.find(sub => sub.name === subarg);
-        // console.log(folder3);
-
-        // // const folder3 = folder2?.children?.find(item => item.name === subarg);
-
-        // const fileExists = folder3?.children?.some(child => child.name === fileIso);
-
-        // if (fileExists) {
-        //     window.open(fullUrl, '_blank');
-        //     // console.log(fullUrl);
-
-        // } else {
-        //     Swal.fire({
-        //         icon: "error",
-        //         title: lang_keyword("File Not Found"),
-        //         text: lang_keyword("This file does not exist in the system."),
-        //     });
-        // }
     };
     return (
         <div className="relative flex items-center justify-center min-h-screen bg-[#f4f4f4] overflow-hidden">

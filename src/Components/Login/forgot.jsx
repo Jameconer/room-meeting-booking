@@ -81,9 +81,9 @@ export default function Forgot() {
 
         try {
 
-            const res = await axios.post(import.meta.env.VITE_API_POST_ForgotOtp, {
+            await axios.post(import.meta.env.VITE_API_POST_ForgotOtp, {
                 email: email,   // <== ส่งค่า email ตรงนี้
-            },);
+            });
 
             Swal.close();
             Swal.fire({
@@ -135,8 +135,6 @@ export default function Forgot() {
                 setEmail("");
                 setShowPlaceholder(true)
             });
-            console.log(err.response);
-
         }
     };
 
